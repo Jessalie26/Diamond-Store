@@ -1,466 +1,1543 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diamond Store — Rice Inventory System</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    :root {
-      --rice-green: #2e7d32; --rice-brown: #8d6e63; --rice-gold: #f9a825;
-      --rice-dark: #5d4037; --danger: #c62828; --light: #fefefe;
-    }
-    body { background: #fefefe; min-height: 100vh; }
 
-    /* LOGIN PAGE */
-    .auth-wrap {
-      display: flex; align-items: center; justify-content: center; min-height: 100vh;
-      background: linear-gradient(135deg, #2e7d32, #558b2f); padding: 1rem;
-    }
-    .auth-card {
-      background: white; padding: 2rem; border-radius: 16px; max-width: 420px; width: 100%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    }
-    .auth-card h2 { text-align: center; color: var(--rice-dark); font-size: 1.8rem; margin-bottom: 0.3rem; }
-    .auth-card .subtitle { text-align: center; color: var(--rice-brown); margin-bottom: 1.5rem; }
-    input { width: 100%; padding: 0.9rem; margin: 0.5rem 0; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
-    input:focus { outline: none; border-color: var(--rice-green); }
-    .btn { padding: 0.9rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 0.5rem; }
-    .btn-primary { background: var(--rice-green); color: white; }
-    .btn-primary:hover { background: #27682b; }
-    .btn-gold { background: var(--rice-gold); color: #3e2723; }
-    .link-text { text-align: center; margin-top: 1rem; font-size: 0.9rem; }
-    .link-text a { color: var(--rice-green); cursor: pointer; text-decoration: none; font-weight: 600; }
-    .message { margin-top: 1rem; padding: 0.8rem; border-radius: 6px; text-align: center; display: none; }
-    .message.error { background: #ffebee; color: #c62828; display: block; }
-    .message.success { background: #e8f5e9; color: #2e7d32; display: block; }
-    .divider { display: flex; align-items: center; margin: 1.2rem 0; }
-    .divider::before, .divider::after { content: ""; flex: 1; height: 1px solid #ddd; }
-    .divider span { padding: 0 1rem; color: #888; }
-    .hidden { display: none !important; }
+<meta charset="UTF-8">
 
-    /* MAIN LAYOUT */
-    .sidebar {
-      position: fixed; top: 0; left: 0; width: 250px; height: 100vh;
-      background: linear-gradient(180deg, #5d4037, #4e342e); color: white; padding-top: 1rem; z-index: 99;
-    }
-    .sidebar h2 { text-align: center; padding: 1rem; color: var(--rice-gold); border-bottom: 1px solid rgba(255,255,255,0.15); }
-    .sidebar a { display: block; color: #f5f5f5; padding: 14px 22px; text-decoration: none; border-left: 4px solid transparent; }
-    .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.08); border-left-color: var(--rice-gold); color: var(--rice-gold); }
-    .main { margin-left: 250px; padding: 1.2rem; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.9rem 1.2rem; border-radius: 10px; border-bottom: 3px solid var(--rice-green); margin-bottom: 1.2rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.2rem; }
-    .stat-card { background: white; padding: 1.2rem; border-radius: 10px; border-top: 4px solid var(--rice-green); text-align: center; }
-    .stat-card h3 { font-size: 1.8rem; color: var(--rice-green); }
-    .panel { background: white; padding: 1.3rem; border-radius: 10px; margin-bottom: 1.2rem; }
-    .panel h3 { color: var(--rice-dark); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #f5f5f5; }
-    .form-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.8rem; }
-    select { padding: 0.7rem; border: 2px solid #e8e8e8; border-radius: 6px; font-size: 0.95rem; flex: 1; min-width: 120px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    th { background: #fff8e1; color: var(--rice-dark); }
-    .low-stock { color: #e65100; font-weight: 700; }
-    .btn-sm { padding: 0.4rem 0.7rem; font-size: 0.85rem; width: auto; border-radius: 4px; }
-    .btn-danger { background: var(--danger); color: white; }
-    hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
-    @media (max-width: 768px) {
-      .sidebar { width: 0; } .sidebar.open { width: 250px; } .main { margin-left: 0; }
-      .form-row { flex-direction: column; } table { display: block; overflow-x: auto; }
-    }
-  </style>
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>Diamond Store </title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+
+body {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.hidden-panel {
+  display: none;
+}
+
+.sidebar {
+  transition: 0.25s ease;
+}
+
+@media(max-width:768px) {
+
+  .sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    z-index: 50;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+}
+
+</style>
+
 </head>
-<body>
 
-<!-- ======================================
-     FEATURE 1: 🔐 LOGIN / CREATE ACCOUNT
-     ====================================== -->
-<div id="page-login" class="auth-wrap">
-  <div class="auth-card">
-    <h2>🌾 Diamond Store</h2>
-    <p class="subtitle">Rice Inventory Management System</p>
 
-    <!-- LOGIN FORM -->
-    <div id="login-form">
-      <input type="email" id="login-email" placeholder="📧 Email Address">
-      <input type="password" id="login-pass" placeholder="🔒 Password">
-      <button class="btn btn-primary" onclick="doLogin()">🔐 Login</button>
-      <p id="login-msg" class="message"></p>
-      <div class="divider"><span>or</span></div>
-      <p class="link-text">Don't have an account? <a onclick="showCreateForm()">✨ Create Account</a></p>
-      <p class="link-text"><a onclick="showForgotForm()">❓ Forgot Password?</a></p>
+<body class="bg-slate-100 text-slate-800">
+
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+
+<section
+  id="loginPage"
+  class="min-h-screen flex items-center justify-center p-5"
+>
+
+  <div
+    class="w-full max-w-md bg-white rounded-3xl shadow-xl p-7"
+  >
+
+    <div class="text-center mb-8">
+
+      <div
+        class="mx-auto mb-4 w-16 h-16 rounded-2xl
+        bg-emerald-600 text-white
+        flex items-center justify-center
+        text-2xl font-bold"
+      >
+        DS
+      </div>
+
+      <h1 class="text-2xl font-bold">
+        Diamond Store
+      </h1>
+
+      <p class="text-slate-500 text-sm mt-1">
+        Rice Inventory & POS System
+      </p>
+
     </div>
 
-    <!-- CREATE ACCOUNT FORM -->
-    <div id="create-form" class="hidden">
-      <h3 style="text-align:center; color:#5d4037; margin-bottom:1rem;">✨ Create New Account</h3>
-      <input type="text" id="new-name" placeholder="👤 Full Name">
-      <input type="email" id="new-email" placeholder="📧 Email Address">
-      <input type="password" id="new-pass" placeholder="🔑 Password (min 6 chars)">
-      <input type="password" id="new-pass2" placeholder="🔑 Confirm Password">
-      <button class="btn btn-gold" onclick="doCreateAccount()">✅ Register</button>
-      <p id="create-msg" class="message"></p>
-      <p class="link-text"><a onclick="showLoginForm()">← Back to Login</a></p>
-    </div>
 
-    <!-- FORGOT PASSWORD FORM -->
-    <div id="forgot-form" class="hidden">
-      <h3 style="text-align:center; color:#5d4037; margin-bottom:1rem;">🔑 Reset Password</h3>
-      <input type="email" id="reset-email" placeholder="📧 Your Email">
-      <button class="btn btn-gold" onclick="sendResetCode()">📩 Send Code</button>
-      <p id="forgot-msg" class="message"></p>
-      <p class="link-text"><a onclick="showLoginForm()">← Back to Login</a></p>
-    </div>
+    <form id="loginForm">
 
-    <!-- RESET PASSWORD FORM -->
-    <div id="reset-form" class="hidden">
-      <h3 style="text-align:center; color:#5d4037; margin-bottom:1rem;">🔑 Enter Reset Code</h3>
-      <input type="text" id="rc-email" readonly style="background:#f5f5f5;">
-      <input type="text" id="reset-code" placeholder="🔢 6-Digit Code">
-      <input type="password" id="new-passwd" placeholder="🔑 New Password">
-      <button class="btn btn-primary" onclick="doResetPassword()">✅ Reset Password</button>
-      <p id="reset-msg" class="message"></p>
-      <p class="link-text"><a onclick="showLoginForm()">← Back to Login</a></p>
-    </div>
+      <label class="block text-sm font-semibold mb-2">
+        Username
+      </label>
+
+      <input
+        id="username"
+        type="text"
+        required
+        autocomplete="username"
+        class="w-full border rounded-xl px-4 py-3 mb-5
+        outline-none focus:ring-2 focus:ring-emerald-500"
+        placeholder="Enter username"
+      >
+
+
+      <label class="block text-sm font-semibold mb-2">
+        Password
+      </label>
+
+      <input
+        id="password"
+        type="password"
+        required
+        autocomplete="current-password"
+        class="w-full border rounded-xl px-4 py-3 mb-5
+        outline-none focus:ring-2 focus:ring-emerald-500"
+        placeholder="Enter password"
+      >
+
+
+      <button
+        type="submit"
+        class="w-full bg-emerald-600
+        hover:bg-emerald-700 text-white
+        font-semibold rounded-xl py-3"
+      >
+        Login
+      </button>
+
+
+      <p
+        id="loginMessage"
+        class="text-center text-sm mt-4"
+      ></p>
+
+    </form>
+
   </div>
+
+</section>
+
+
+<!-- =====================================================
+     APP
+===================================================== -->
+
+<section
+  id="app"
+  class="hidden min-h-screen"
+>
+
+
+<!-- MOBILE OVERLAY -->
+
+<div
+  id="overlay"
+  onclick="toggleSidebar()"
+  class="hidden fixed inset-0 bg-black/40 z-40"
+></div>
+
+
+<!-- SIDEBAR -->
+
+<aside
+  id="sidebar"
+  class="sidebar bg-slate-900 text-white
+  w-72 min-h-screen p-5"
+>
+
+  <div class="mb-8">
+
+    <div class="flex items-center gap-3">
+
+      <div
+        class="w-11 h-11 rounded-xl bg-emerald-500
+        flex items-center justify-center
+        font-bold"
+      >
+        DS
+      </div>
+
+      <div>
+
+        <h2 class="font-bold">
+          Diamond Store
+        </h2>
+
+        <p class="text-xs text-slate-400">
+          Inventory System
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <nav class="space-y-2">
+
+    <button
+      data-panel="dashboard"
+      onclick="showPanel('dashboard')"
+      class="nav-btn"
+    >
+      📊 Dashboard
+    </button>
+
+
+    <button
+      data-panel="rice"
+      onclick="showPanel('rice')"
+      class="nav-btn admin-only"
+    >
+      🌾 Rice Stock Directory
+    </button>
+
+
+    <button
+      data-panel="stockin"
+      onclick="showPanel('stockin')"
+      class="nav-btn admin-only"
+    >
+      📥 Stock In
+    </button>
+
+
+    <button
+      data-panel="stockout"
+      onclick="showPanel('stockout')"
+      class="nav-btn"
+    >
+      🛒 Stock Out / POS
+    </button>
+
+
+    <button
+      data-panel="suppliers"
+      onclick="showPanel('suppliers')"
+      class="nav-btn admin-only"
+    >
+      🚚 Suppliers
+    </button>
+
+
+    <button
+      data-panel="spoilage"
+      onclick="showPanel('spoilage')"
+      class="nav-btn admin-only"
+    >
+      ⚠️ Spoilage & Quality
+    </button>
+
+
+    <button
+      data-panel="accounts"
+      onclick="showPanel('accounts')"
+      class="nav-btn admin-only"
+    >
+      👤 Account Management
+    </button>
+
+  </nav>
+
+
+  <button
+    onclick="logout()"
+    class="mt-8 w-full bg-red-500/20
+    hover:bg-red-500/30 text-red-300
+    rounded-xl py-3"
+  >
+    Logout
+  </button>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="flex-1 min-w-0">
+
+
+<!-- TOPBAR -->
+
+<header
+  class="bg-white border-b p-4 flex
+  items-center justify-between sticky top-0 z-30"
+>
+
+  <div class="flex items-center gap-3">
+
+    <button
+      onclick="toggleSidebar()"
+      class="md:hidden text-xl"
+    >
+      ☰
+    </button>
+
+    <div>
+
+      <h1
+        id="pageTitle"
+        class="text-xl font-bold"
+      >
+        Dashboard
+      </h1>
+
+      <p
+        id="welcomeText"
+        class="text-xs text-slate-500"
+      ></p>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="roleBadge"
+    class="text-xs font-bold
+    bg-emerald-100 text-emerald-700
+    px-3 py-2 rounded-full"
+  ></div>
+
+</header>
+
+
+<!-- CONTENT -->
+
+<div class="p-4 md:p-7">
+
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<section
+  id="panel-dashboard"
+  class="panel"
+>
+
+  <div
+    class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
+  >
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm">
+
+      <p class="text-sm text-slate-500">
+        Total Sacks Available
+      </p>
+
+      <h2
+        id="totalSacks"
+        class="text-3xl font-bold mt-2"
+      >
+        0
+      </h2>
+
+    </div>
+
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm">
+
+      <p class="text-sm text-slate-500">
+        Today's Revenue
+      </p>
+
+      <h2
+        id="dailyRevenue"
+        class="text-3xl font-bold mt-2"
+      >
+        ₱0.00
+      </h2>
+
+    </div>
+
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm">
+
+      <p class="text-sm text-slate-500">
+        Low Stock Alerts
+      </p>
+
+      <h2
+        id="lowStockCount"
+        class="text-3xl font-bold mt-2 text-red-500"
+      >
+        0
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  <div class="bg-white rounded-2xl shadow-sm p-5">
+
+    <h2 class="font-bold text-lg mb-4">
+      Low Stock Alerts
+    </h2>
+
+    <div
+      id="lowStockList"
+      class="space-y-2"
+    >
+      No alerts.
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     RICE
+===================================================== -->
+
+<section
+  id="panel-rice"
+  class="panel hidden-panel"
+>
+
+  <div class="bg-white rounded-2xl shadow-sm p-5">
+
+    <div
+      class="flex flex-col md:flex-row
+      justify-between gap-3 mb-5"
+    >
+
+      <div>
+
+        <h2 class="text-xl font-bold">
+          Rice Stock Directory
+        </h2>
+
+        <p class="text-sm text-slate-500">
+          Manage rice varieties and inventory.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full text-sm">
+
+        <thead>
+
+          <tr class="border-b text-left">
+
+            <th class="p-3">Brand</th>
+            <th class="p-3">Variety</th>
+            <th class="p-3">Grade</th>
+            <th class="p-3">Packaging</th>
+            <th class="p-3">Sacks</th>
+            <th class="p-3">Kilos</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="riceTable"></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     STOCK IN
+===================================================== -->
+
+<section
+  id="panel-stockin"
+  class="panel hidden-panel"
+>
+
+  <div class="bg-white rounded-2xl shadow-sm p-5">
+
+    <h2 class="text-xl font-bold">
+      Stock In — Milling & Arrivals
+    </h2>
+
+    <p class="text-sm text-slate-500 mb-5">
+      Incoming rice shipments and procurement records.
+    </p>
+
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full text-sm">
+
+        <thead>
+
+          <tr class="border-b text-left">
+
+            <th class="p-3">Date</th>
+            <th class="p-3">Supplier</th>
+            <th class="p-3">Rice ID</th>
+            <th class="p-3">Sacks</th>
+            <th class="p-3">Cost/Sack</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="stockInTable"></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     STOCK OUT
+===================================================== -->
+
+<section
+  id="panel-stockout"
+  class="panel hidden-panel"
+>
+
+  <div class="max-w-xl">
+
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+
+      <h2 class="text-xl font-bold mb-1">
+        Stock Out / POS
+      </h2>
+
+      <p class="text-sm text-slate-500 mb-6">
+        Process customer sales by kilo or sack.
+      </p>
+
+
+      <label class="block text-sm font-semibold mb-2">
+        Rice
+      </label>
+
+      <select
+        id="saleRice"
+        class="w-full border rounded-xl px-4 py-3 mb-4"
+      ></select>
+
+
+      <label class="block text-sm font-semibold mb-2">
+        Sale Type
+      </label>
+
+      <select
+        id="saleType"
+        class="w-full border rounded-xl px-4 py-3 mb-4"
+      >
+
+        <option value="Kilo">
+          Per Kilo
+        </option>
+
+        <option value="Sack">
+          Per Sack
+        </option>
+
+      </select>
+
+
+      <label class="block text-sm font-semibold mb-2">
+        Quantity
+      </label>
+
+      <input
+        id="saleQuantity"
+        type="number"
+        min="1"
+        step="0.01"
+        class="w-full border rounded-xl px-4 py-3 mb-4"
+        placeholder="Enter quantity"
+      >
+
+
+      <label class="block text-sm font-semibold mb-2">
+        Unit Price
+      </label>
+
+      <input
+        id="salePrice"
+        type="number"
+        min="0"
+        step="0.01"
+        class="w-full border rounded-xl px-4 py-3 mb-5"
+        placeholder="0.00"
+      >
+
+
+      <button
+        onclick="processSale()"
+        class="w-full bg-emerald-600
+        hover:bg-emerald-700
+        text-white rounded-xl py-3 font-bold"
+      >
+        Complete Sale
+      </button>
+
+
+      <p
+        id="saleMessage"
+        class="text-center text-sm mt-4"
+      ></p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     SUPPLIERS
+===================================================== -->
+
+<section
+  id="panel-suppliers"
+  class="panel hidden-panel"
+>
+
+  <div class="bg-white rounded-2xl shadow-sm p-5">
+
+    <h2 class="text-xl font-bold mb-1">
+      Supplier Management
+    </h2>
+
+    <p class="text-sm text-slate-500 mb-5">
+      Manage rice mills and supply partners.
+    </p>
+
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full text-sm">
+
+        <thead>
+
+          <tr class="border-b text-left">
+
+            <th class="p-3">Supplier</th>
+            <th class="p-3">Contact</th>
+            <th class="p-3">Phone</th>
+            <th class="p-3">Current Price</th>
+            <th class="p-3">Status</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="supplierTable"></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     SPOILAGE
+===================================================== -->
+
+<section
+  id="panel-spoilage"
+  class="panel hidden-panel"
+>
+
+  <div class="bg-white rounded-2xl shadow-sm p-5">
+
+    <h2 class="text-xl font-bold">
+      Spoilage & Quality Tracker
+    </h2>
+
+    <p class="text-sm text-slate-500 mb-5">
+      Audit inventory losses and quality issues.
+    </p>
+
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full text-sm">
+
+        <thead>
+
+          <tr class="border-b text-left">
+
+            <th class="p-3">Date</th>
+            <th class="p-3">Rice ID</th>
+            <th class="p-3">Quantity</th>
+            <th class="p-3">Reason</th>
+            <th class="p-3">Remarks</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="spoilageTable"></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     ACCOUNT MANAGEMENT
+===================================================== -->
+
+<section
+  id="panel-accounts"
+  class="panel hidden-panel"
+>
+
+  <div class="bg-white rounded-2xl shadow-sm p-5">
+
+    <h2 class="text-xl font-bold">
+      Account Management
+    </h2>
+
+    <p class="text-sm text-slate-500 mt-1">
+      Manage employee access and operational security.
+    </p>
+
+
+    <div class="mt-6 grid md:grid-cols-2 gap-4">
+
+      <div
+        class="border rounded-2xl p-5"
+      >
+
+        <h3 class="font-bold">
+          Admin Access
+        </h3>
+
+        <p class="text-sm text-slate-500 mt-2">
+          Full access to all inventory modules,
+          suppliers, spoilage records and accounts.
+        </p>
+
+      </div>
+
+
+      <div
+        class="border rounded-2xl p-5"
+      >
+
+        <h3 class="font-bold">
+          Cashier Access
+        </h3>
+
+        <p class="text-sm text-slate-500 mt-2">
+          Dashboard and Stock Out / POS only.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
 </div>
 
-<!-- ======================================
-     MAIN APPLICATION — ALL 7 FEATURES
-     ====================================== -->
-<div id="app-container" class="hidden">
-  <div class="sidebar">
-    <h2>🌾 Diamond Store</h2>
-    <a href="#" class="nav-link active" data-page="dashboard">📊 Dashboard</a>
-    <a href="#" class="nav-link" data-page="inventory">📦 Rice Inventory</a>
-    <a href="#" class="nav-link" data-page="stockin">📥 Stock-In / Purchases</a>
-    <a href="#" class="nav-link" data-page="stockout">📤 Stock-Out / Sales</a>
-    <a href="#" class="nav-link" data-page="reports">📈 Reports & History</a>
-    <a href="#" class="nav-link" data-page="settings">⚙️ Settings</a>
-    <a href="#" onclick="doLogout()" style="margin-top:2rem;">🚪 Logout</a>
-  </div>
+</main>
 
-  <div class="main">
-    <div class="topbar">
-      <h4 id="page-title">Dashboard</h4>
-      <span>👤 <span id="user-display"></span></span>
-    </div>
+</section>
 
-    <!-- FEATURE 2: 📊 DASHBOARD -->
-    <div id="dashboard" class="page-content">
-      <div class="grid">
-        <div class="stat-card"><h3 id="total-types">0</h3><p>Rice Varieties</p></div>
-        <div class="stat-card"><h3 id="total-qty">0</h3><p>Total Stock (kg)</p></div>
-        <div class="stat-card"><h3 id="low-count">0</h3><p>Low Stock Items</p></div>
-        <div class="stat-card"><h3 id="total-sales">₱0</h3><p>Total Sales</p></div>
-      </div>
-      <div class="panel">
-        <h3>📋 Inventory Overview</h3>
-        <div id="dash-list"></div>
-      </div>
-    </div>
-
-    <!-- FEATURE 3: 📦 INVENTORY -->
-    <div id="inventory" class="page-content hidden">
-      <div class="panel">
-        <h3>➕ Add New Rice Variety</h3>
-        <div class="form-row">
-          <input type="text" id="rice-name" placeholder="Rice Name / Brand">
-          <select id="rice-cat">
-            <option value="Premium">Premium Rice</option>
-            <option value="Regular">Regular Rice</option>
-            <option value="Special">Special Rice</option>
-          </select>
-          <input type="number" id="rice-qty" placeholder="Initial Qty (kg)">
-          <input type="number" id="rice-price" placeholder="Price per kg (₱)">
-          <input type="number" id="rice-reorder" placeholder="Reorder Level (kg)" value="10">
-          <button class="btn btn-primary btn-sm" onclick="addRice()">➕ Add Rice</button>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>📦 Rice Inventory List</h3>
-        <table id="inv-table">
-          <thead><tr><th>ID</th><th>Rice Name</th><th>Category</th><th>Stock (kg)</th><th>Price/kg</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- FEATURE 4: 📥 STOCK-IN / PURCHASES -->
-    <div id="stockin" class="page-content hidden">
-      <div class="panel">
-        <h3>📥 Record Rice Stock-In</h3>
-        <div class="form-row">
-          <select id="si-rice"></select>
-          <input type="number" id="si-qty" placeholder="Qty (kg)">
-          <input type="text" id="si-supplier" placeholder="Supplier Name">
-          <button class="btn btn-primary btn-sm" onclick="recordStockIn()">✅ Record</button>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>📋 Stock-In History</h3>
-        <table id="si-table"><thead><tr><th>Date</th><th>Ref No.</th><th>Rice Name</th><th>Qty In (kg)</th><th>Supplier</th></tr></thead><tbody></tbody></table>
-      </div>
-    </div>
-
-    <!-- FEATURE 5: 📤 STOCK-OUT / SALES -->
-    <div id="stockout" class="page-content hidden">
-      <div class="panel">
-        <h3>📤 Record Rice Sale</h3>
-        <div class="form-row">
-          <select id="so-rice"></select>
-          <input type="number" id="so-qty" placeholder="Qty Sold (kg)">
-          <input type="number" id="so-price" placeholder="Price/kg (optional)">
-          <button class="btn btn-primary btn-sm" onclick="recordStockOut()">💰 Record Sale</button>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>💰 Sales History</h3>
-        <table id="so-table"><thead><tr><th>Date</th><th>Ref No.</th><th>Rice Name</th><th>Qty Sold (kg)</th><th>Total Amount</th></tr></thead><tbody></tbody></table>
-      </div>
-    </div>
-
-    <!-- FEATURE 6: 📈 REPORTS & HISTORY -->
-    <div id="reports" class="page-content hidden">
-      <div class="panel">
-        <h3>📈 Reports</h3>
-        <div class="form-row">
-          <button class="btn btn-primary btn-sm" onclick="loadAllStockIn()">📥 Stock-In Report</button>
-          <button class="btn btn-primary btn-sm" onclick="loadAllStockOut()">💰 Sales Report</button>
-        </div>
-        <table id="rpt-table" style="margin-top:1rem;"><thead id="rpt-head"></thead><tbody id="rpt-body"></tbody></table>
-      </div>
-    </div>
-
-    <!-- FEATURE 7: ⚙️ SETTINGS -->
-    <div id="settings" class="page-content hidden">
-      <div class="panel">
-        <h3>⚙️ System Settings</h3>
-        <p><strong>Current User:</strong> <span id="set-user"></span></p>
-        <p><strong>Role:</strong> <span id="set-role"></span></p>
-        <hr>
-        <h4>➕ Add New System User (Admin)</h4>
-        <div class="form-row">
-          <input type="email" id="new-usr-email" placeholder="Email">
-          <input type="password" id="new-usr-pass" placeholder="Password">
-          <select id="new-usr-role"><option value="staff">Staff</option><option value="admin">Admin</option></select>
-          <button class="btn btn-primary btn-sm" onclick="addNewUser()">✅ Add User</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
-let currentUser = null, inventoryData = [], resetEmail = "";
 
-// ========== FORM SWITCHING ==========
-function showLoginForm() { hideAllForms(); document.getElementById('login-form').classList.remove('hidden'); }
-function showCreateForm() { hideAllForms(); document.getElementById('create-form').classList.remove('hidden'); }
-function showForgotForm() { hideAllForms(); document.getElementById('forgot-form').classList.remove('hidden'); }
-function showResetForm(email) { hideAllForms(); document.getElementById('reset-form').classList.remove('hidden'); document.getElementById('rc-email').value = email; resetEmail = email; }
-function hideAllForms() {
-  ['login-form','create-form','forgot-form','reset-form'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-  document.querySelectorAll('.message').forEach(m=>{m.classList.remove('error','success');m.style.display='none';});
-}
-function showMessage(elId,text,isErr=true){const el=document.getElementById(elId);el.textContent=text;el.className='message '+(isErr?'error':'success');}
+/* =====================================================
+   API
+===================================================== */
 
-// ==========================================
-// FEATURE 1: 🔐 LOGIN FUNCTION
-// ==========================================
-function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  if(!email||!pass)return showMessage('login-msg','⚠️ Fill in all fields');
-  
-  google.script.run.withSuccessHandler(r=>{
-    if(r.success){currentUser=r;sessionStorage.setItem('user',JSON.stringify(r));showApp();}
-    else showMessage('login-msg','❌ '+r.message);
-  }).validateUser(email,pass);
-}
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzBifShs_l_MAro4HtXwLewo8MvLioxlrtRy5EWeoP0DzLXbUodCIGsLcDPjUZoJQHSLw/exec";
 
-// ==========================================
-// FEATURE 1A: ✍️ CREATE ACCOUNT FUNCTION
-// ==========================================
-function doCreateAccount() {
-  const name = document.getElementById('new-name').value.trim();
-  const email = document.getElementById('new-email').value.trim();
-  const pass = document.getElementById('new-pass').value;
-  const pass2 = document.getElementById('new-pass2').value;
-  if(!name||!email||!pass)return showMessage('create-msg','⚠️ Fill all fields');
-  if(pass.length<6)return showMessage('create-msg','⚠️ Password min 6 chars');
-  if(pass!==pass2)return showMessage('create-msg','⚠️ Passwords do not match');
-  
-  google.script.run.withSuccessHandler(r=>{
-    if(r.success){showMessage('create-msg','✅ '+r.message,false);setTimeout(showLoginForm,2000);}
-    else showMessage('create-msg','❌ '+r.message);
-  }).createAccount(email,pass,name);
+
+let currentUser = null;
+
+
+/* =====================================================
+   API REQUEST
+===================================================== */
+
+async function api(action, params = {}) {
+
+  const query =
+    new URLSearchParams({
+      action,
+      ...params
+    });
+
+  const response =
+    await fetch(
+      `${API_URL}?${query.toString()}`,
+      {
+        method: "GET",
+        redirect: "follow"
+      }
+    );
+
+  return await response.json();
 }
 
-// ==========================================
-// FEATURE 1B: 🔑 FORGOT PASSWORD FUNCTIONS
-// ==========================================
-function sendResetCode() {
-  const email = document.getElementById('reset-email').value.trim();
-  if(!email)return showMessage('forgot-msg','⚠️ Enter your email');
-  google.script.run.withSuccessHandler(r=>{
-    if(r.success){showMessage('forgot-msg','✅ '+r.message,false);setTimeout(()=>showResetForm(email),1200);}
-    else showMessage('forgot-msg','❌ '+r.message);
-  }).sendResetCode(email);
-}
-function doResetPassword() {
-  const code = document.getElementById('reset-code').value.trim();
-  const newPass = document.getElementById('new-passwd').value;
-  if(!code||!newPass)return showMessage('reset-msg','⚠️ Enter code and new password');
-  if(newPass.length<6)return showMessage('reset-msg','⚠️ Password min 6 chars');
-  google.script.run.withSuccessHandler(r=>{
-    if(r.success){showMessage('reset-msg','✅ '+r.message,false);setTimeout(showLoginForm,2000);}
-    else showMessage('reset-msg','❌ '+r.message);
-  }).resetPasswordWithCode(resetEmail,code,newPass);
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+document
+  .getElementById("loginForm")
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+      const username =
+        document.getElementById("username").value.trim();
+
+      const password =
+        document.getElementById("password").value;
+
+      const message =
+        document.getElementById("loginMessage");
+
+      message.textContent = "Logging in...";
+      message.className =
+        "text-center text-sm mt-4 text-slate-500";
+
+
+      try {
+
+        const result =
+          await api(
+            "login",
+            {
+              username,
+              password
+            }
+          );
+
+
+        if (!result.success) {
+
+          message.textContent =
+            result.message;
+
+          message.className =
+            "text-center text-sm mt-4 text-red-500";
+
+          return;
+        }
+
+
+        currentUser =
+          result.user;
+
+
+        sessionStorage.setItem(
+          "diamondUser",
+          JSON.stringify(currentUser)
+        );
+
+
+        initializeApp();
+
+
+      } catch(error) {
+
+        console.error(error);
+
+        message.textContent =
+          "Unable to connect to the server.";
+
+        message.className =
+          "text-center text-sm mt-4 text-red-500";
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+function initializeApp() {
+
+  document
+    .getElementById("loginPage")
+    .classList.add("hidden");
+
+  document
+    .getElementById("app")
+    .classList.remove("hidden");
+
+
+  document
+    .getElementById("welcomeText")
+    .textContent =
+      `Welcome, ${currentUser.fullname}`;
+
+
+  document
+    .getElementById("roleBadge")
+    .textContent =
+      currentUser.role;
+
+
+  applyRoleAccess();
+
+  loadDashboard();
+
 }
 
-// ========== APP LOAD ==========
-function checkSession(){const s=sessionStorage.getItem('user');if(s){currentUser=JSON.parse(s);showApp();}}
-function showApp(){
-  document.getElementById('page-login').classList.add('hidden');
-  document.getElementById('app-container').classList.remove('hidden');
-  document.getElementById('user-display').textContent=currentUser.email;
-  document.getElementById('set-user').textContent=currentUser.email;
-  document.getElementById('set-role').textContent=currentUser.role;
-  setupNav(); loadDashboard();
-}
-function doLogout(){sessionStorage.removeItem('user');location.reload();}
 
-// ========== NAVIGATION ==========
-function setupNav(){
-  document.querySelectorAll('.nav-link').forEach(link=>{
-    link.onclick=e=>{e.preventDefault();
-      document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));link.classList.add('active');
-      const p=link.dataset.page;
-      document.querySelectorAll('.page-content').forEach(c=>c.classList.add('hidden'));
-      document.getElementById(p).classList.remove('hidden');
-      document.getElementById('page-title').textContent=link.textContent.trim();
-      if(p==='inventory')loadInventory(); if(p==='stockin')loadStockInPage(); if(p==='stockout')loadStockOutPage();
-    };
-  });
-}
+/* =====================================================
+   ROLE ACCESS
+===================================================== */
 
-// ==========================================
-// FEATURE 2: 📊 DASHBOARD FUNCTION
-// ==========================================
-async function loadDashboard(){
-  inventoryData=await google.script.run.withSuccessHandler(d=>d).getInventory();
-  document.getElementById('total-types').textContent=inventoryData.length;
-  let totalQty=0,lowCount=0;
-  inventoryData.forEach(r=>{totalQty+=Number(r[3]); if(Number(r[3])<=Number(r[5]))lowCount++;});
-  document.getElementById('total-qty').textContent=totalQty+' kg';
-  document.getElementById('low-count').textContent=lowCount;
-  const sales=await google.script.run.withSuccessHandler(d=>d).getStockOutRecords();
-  const totalSales=sales.reduce((s,r)=>s+Number(r[5]),0);
-  document.getElementById('total-sales').textContent='₱'+totalSales.toLocaleString();
-  document.getElementById('dash-list').innerHTML=inventoryData.length===0
-    ?'<p style="color:#888;padding:1rem;">🌾 No rice added yet. Go to Rice Inventory to add rice!</p>'
-    :inventoryData.map(r=>`<div style="padding:8px;border-bottom:1px solid #eee;">
-      <strong>${r[1]}</strong> — ${r[3]} kg @ ₱${r[4]}/kg — ${Number(r[3])<=Number(r[5])?'<span class="low-stock">⚠️ LOW STOCK</span>':'✅ In Stock'}</div>`).join('');
+function applyRoleAccess() {
+
+  const admin =
+    String(currentUser.role).toLowerCase()
+    === "admin";
+
+
+  document
+    .querySelectorAll(".admin-only")
+    .forEach(button => {
+
+      if (admin) {
+
+        button.classList.remove("hidden");
+
+      } else {
+
+        button.classList.add("hidden");
+
+      }
+
+    });
+
 }
 
-// ==========================================
-// FEATURE 3: 📦 INVENTORY FUNCTIONS
-// ==========================================
-async function loadInventory(){
-  inventoryData=await google.script.run.withSuccessHandler(d=>d).getInventory();
-  const tb=document.querySelector('#inv-table tbody');
-  tb.innerHTML=inventoryData.length===0?'<tr><td colspan="7" style="text-align:center;color:#888;">🌾 No rice in inventory yet.</td></tr>':
-    inventoryData.map(r=>{
-      const st=Number(r[3])<=Number(r[5])?'<span class="low-stock">⚠️ Low Stock</span>':'✅ Good';
-      return `<tr><td>${r[0].slice(-10)}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]} kg</td><td>₱${r[4]}</td><td>${st}</td><td><button class="btn btn-sm btn-danger" onclick="delRice('${r[0]}')">🗑️</button></td></tr>`;
-    }).join('');
-  updateDropdowns();
-}
-async function addRice(){
-  const item={
-    name:document.getElementById('rice-name').value,
-    category:document.getElementById('rice-cat').value,
-    qty:document.getElementById('rice-qty').value,
-    price:document.getElementById('rice-price').value,
-    reorder:document.getElementById('rice-reorder').value||10
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+function showPanel(name) {
+
+  const allowed =
+    checkPermission(name);
+
+  if (!allowed) {
+
+    alert(
+      "You do not have permission to access this module."
+    );
+
+    return;
+  }
+
+
+  document
+    .querySelectorAll(".panel")
+    .forEach(panel => {
+
+      panel.classList.add("hidden-panel");
+
+    });
+
+
+  const panel =
+    document.getElementById(
+      `panel-${name}`
+    );
+
+  if (panel) {
+
+    panel.classList.remove("hidden-panel");
+
+  }
+
+
+  const titles = {
+
+    dashboard:
+      "Dashboard",
+
+    rice:
+      "Rice Stock Directory",
+
+    stockin:
+      "Stock In",
+
+    stockout:
+      "Stock Out / POS",
+
+    suppliers:
+      "Supplier Management",
+
+    spoilage:
+      "Spoilage & Quality",
+
+    accounts:
+      "Account Management"
+
   };
-  if(!item.name||!item.qty||!item.price)return alert('⚠️ Fill all fields!');
-  await google.script.run.withSuccessHandler(()=>{loadInventory();loadDashboard();}).addInventory(item);
-  document.getElementById('rice-name').value='';document.getElementById('rice-qty').value='';document.getElementById('rice-price').value='';
-}
-async function delRice(id){
-  if(confirm('⚠️ Delete this rice?')){await google.script.run.withSuccessHandler(()=>{loadInventory();loadDashboard();}).deleteInventory(id);}
-}
-function updateDropdowns(){
-  let si=document.getElementById('si-rice'),so=document.getElementById('so-rice');
-  si.innerHTML=so.innerHTML='<option value="">-- Select Rice --</option>';
-  inventoryData.forEach(r=>{si.innerHTML+=`<option value="${r[0]}">${r[1]} — ${r[3]} kg</option>`; so.innerHTML+=`<option value="${r[0]}">${r[1]} — ${r[3]} kg</option>`;});
+
+
+  document
+    .getElementById("pageTitle")
+    .textContent =
+      titles[name] || "Dashboard";
+
+
+  if (name === "dashboard")
+    loadDashboard();
+
+  if (name === "rice")
+    loadRice();
+
+  if (name === "stockin")
+    loadStockIn();
+
+  if (name === "suppliers")
+    loadSuppliers();
+
+  if (name === "spoilage")
+    loadSpoilage();
+
+
+  if (window.innerWidth < 768) {
+    toggleSidebar();
+  }
+
 }
 
-// ==========================================
-// FEATURE 4: 📥 STOCK-IN FUNCTIONS
-// ==========================================
-async function loadStockInPage(){
-  if(!inventoryData.length)await loadInventory();
-  const recs=await google.script.run.withSuccessHandler(d=>d).getStockInRecords();
-  document.querySelector('#si-table tbody').innerHTML=recs.length===0?'<tr><td colspan="5" style="text-align:center;color:#888;">📥 No records yet.</td></tr>':
-    recs.reverse().map(r=>`<tr><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1].slice(-8)}</td><td>${r[3]}</td><td>${r[4]} kg</td><td>${r[5]||'-'}</td></tr>`).join('');
-}
-async function recordStockIn(){
-  const rid=document.getElementById('si-rice').value,qty=document.getElementById('si-qty').value,sup=document.getElementById('si-supplier').value;
-  if(!rid||!qty)return alert('⚠️ Select rice and quantity!');
-  google.script.run.withSuccessHandler(r=>{
-    if(r.success){alert('✅ Recorded! New Stock: '+r.newQty+' kg');loadStockInPage();loadDashboard();}
-    else alert('❌ '+r.message);
-  }).stockIn(rid,qty,sup,currentUser.email);
+
+/* =====================================================
+   PERMISSION CHECK
+===================================================== */
+
+function checkPermission(panel) {
+
+  const role =
+    String(currentUser.role)
+    .toLowerCase();
+
+
+  if (role === "admin") {
+
+    return true;
+
+  }
+
+
+  if (role === "cashier") {
+
+    return [
+      "dashboard",
+      "stockout"
+    ].includes(panel);
+
+  }
+
+
+  return false;
 }
 
-// ==========================================
-// FEATURE 5: 📤 STOCK-OUT / SALES FUNCTIONS
-// ==========================================
-async function loadStockOutPage(){
-  if(!inventoryData.length)await loadInventory();
-  const recs=await google.script.run.withSuccessHandler(d=>d).getStockOutRecords();
-  document.querySelector('#so-table tbody').innerHTML=recs.length===0?'<tr><td colspan="5" style="text-align:center;color:#888;">💰 No sales yet.</td></tr>':
-    recs.reverse().map(r=>`<tr><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1].slice(-8)}</td><td>${r[3]}</td><td>${r[4]} kg</td><td>₱${r[5]}</td></tr>`).join('');
-}
-async function recordStockOut(){
-  const rid=document.getElementById('so-rice').value,qty=document.getElementById('so-qty').value,price=document.getElementById('so-price').value||null;
-  if(!rid||!qty)return alert('⚠️ Select rice and quantity!');
-  google.script.run.withSuccessHandler(r=>{
-    if(r.success){alert('✅ Sale Recorded!\nTotal: ₱'+r.total+'\nRemaining: '+r.newQty+' kg');loadStockOutPage();loadDashboard();}
-    else alert('❌ '+r.message);
-  }).stockOut(rid,qty,price,currentUser.email);
+
+/* =====================================================
+   DASHBOARD
+===================================================== */
+
+async function loadDashboard() {
+
+  try {
+
+    const result =
+      await api("dashboard");
+
+
+    if (!result.success)
+      return;
+
+
+    const data =
+      result.data;
+
+
+    document
+      .getElementById("totalSacks")
+      .textContent =
+        Number(data.totalSacks).toLocaleString();
+
+
+    document
+      .getElementById("dailyRevenue")
+      .textContent =
+        "₱" +
+        Number(data.dailyRevenue)
+          .toLocaleString(
+            "en-PH",
+            {
+              minimumFractionDigits: 2
+            }
+          );
+
+
+    document
+      .getElementById("lowStockCount")
+      .textContent =
+        data.lowStockCount;
+
+
+    const list =
+      document.getElementById(
+        "lowStockList"
+      );
+
+
+    if (!data.lowStockItems.length) {
+
+      list.innerHTML =
+        `<div class="text-green-600">
+          All rice stocks are above the threshold.
+        </div>`;
+
+      return;
+    }
+
+
+    list.innerHTML =
+      data.lowStockItems
+        .map(item => `
+
+          <div
+            class="flex justify-between
+            items-center border rounded-xl p-3"
+          >
+
+            <div>
+
+              <div class="font-semibold">
+                ${escapeHTML(item.Brand || "")}
+                ${escapeHTML(item.Variety || "")}
+              </div>
+
+              <div class="text-xs text-slate-500">
+                ${escapeHTML(item.Packaging || "")}
+              </div>
+
+            </div>
+
+            <span
+              class="text-red-600 font-bold"
+            >
+              ${Number(item.StockSacks || 0)}
+              sacks
+            </span>
+
+          </div>
+
+        `)
+        .join("");
+
+
+  } catch(error) {
+
+    console.error(error);
+
+  }
+
 }
 
-// ==========================================
-// FEATURE 6: 📈 REPORT FUNCTIONS
-// ==========================================
-async function loadAllStockIn(){
-  document.getElementById('rpt-head').innerHTML='<tr><th>Date</th><th>Ref</th><th>Rice</th><th>Qty In</th><th>Supplier</th></tr>';
-  const recs=await google.script.run.withSuccessHandler(d=>d).getStockInRecords();
-  document.getElementById('rpt-body').innerHTML=recs.reverse().map(r=>`<tr><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]} kg</td><td>${r[5]||'-'}</td></tr>`).join('');
-}
-async function loadAllStockOut(){
-  document.getElementById('rpt-head').innerHTML='<tr><th>Date</th><th>Ref</th><th>Rice</th><th>Qty Sold</th><th>Total</th></tr>';
-  const recs=await google.script.run.withSuccessHandler(d=>d).getStockOutRecords();
-  document.getElementById('rpt-body').innerHTML=recs.reverse().map(r=>`<tr><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]} kg</td><td>₱${r[5]}</td></tr>`).join('');
+
+/* =====================================================
+   RICE
+===================================================== */
+
+async function loadRice() {
+
+  const result =
+    await api("rice_list");
+
+
+  if (!result.success)
+    return;
+
+
+  document
+    .getElementById("riceTable")
+    .innerHTML =
+      result.data
+        .map(item => `
+
+          <tr class="border-b">
+
+            <td class="p-3">
+              ${escapeHTML(item.Brand || "")}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Variety || "")}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Grade || "")}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Packaging || "")}
+            </td>
+
+            <td class="p-3">
+              ${Number(item.StockSacks || 0)}
+            </td>
+
+            <td class="p-3">
+              ${Number(item.StockKilos || 0)}
+            </td>
+
+          </tr>
+
+        `)
+        .join("");
+
 }
 
-// ==========================================
-// FEATURE 7: ⚙️ SETTINGS FUNCTION
-// ==========================================
-async function addNewUser(){
-  const email=document.getElementById('new-usr-email').value.trim();
-  const pass=document.getElementById('new-usr-pass').value;
-  const role=document.getElementById('new-usr-role').value;
-  if(!email||!pass)return alert('⚠️ Fill email and password!');
-  await google.script.run.withSuccessHandler(()=>alert('✅ User added!')).addUser(email,pass,role);
-  document.getElementById('new-usr-email').value='';document.getElementById('new-usr-pass').value='';
+
+/* =====================================================
+   STOCK IN
+===================================================== */
+
+async function loadStockIn() {
+
+  const result =
+    await api("stockin_list");
+
+
+  if (!result.success)
+    return;
+
+
+  document
+    .getElementById("stockInTable")
+    .innerHTML =
+      result.data
+        .map(item => `
+
+          <tr class="border-b">
+
+            <td class="p-3">
+              ${formatDate(item.Date)}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Supplier || "")}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.RiceID || "")}
+            </td>
+
+            <td class="p-3">
+              ${Number(item.Sacks || 0)}
+            </td>
+
+            <td class="p-3">
+              ₱${Number(item.CostPerSack || 0)
+                .toLocaleString()}
+            </td>
+
+          </tr>
+
+        `)
+        .join("");
+
 }
 
-// ========== INITIALIZE ==========
-window.onload=checkSession;
+
+/* =====================================================
+   SUPPLIERS
+===================================================== */
+
+async function loadSuppliers() {
+
+  const result =
+    await api("supplier_list");
+
+
+  if (!result.success)
+    return;
+
+
+  document
+    .getElementById("supplierTable")
+    .innerHTML =
+      result.data
+        .map(item => `
+
+          <tr class="border-b">
+
+            <td class="p-3 font-semibold">
+              ${escapeHTML(item.SupplierName || "")}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.ContactPerson || "")}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Phone || "")}
+            </td>
+
+            <td class="p-3">
+              ₱${Number(item.CurrentPrice || 0)
+                .toLocaleString()}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Status || "")}
+            </td>
+
+          </tr>
+
+        `)
+        .join("");
+
+}
+
+
+/* =====================================================
+   SPOILAGE
+===================================================== */
+
+async function loadSpoilage() {
+
+  const result =
+    await api("spoilage_list");
+
+
+  if (!result.success)
+    return;
+
+
+  document
+    .getElementById("spoilageTable")
+    .innerHTML =
+      result.data
+        .map(item => `
+
+          <tr class="border-b">
+
+            <td class="p-3">
+              ${formatDate(item.Date)}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.RiceID || "")}
+            </td>
+
+            <td class="p-3">
+              ${Number(item.Quantity || 0)}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Reason || "")}
+            </td>
+
+            <td class="p-3">
+              ${escapeHTML(item.Remarks || "")}
+            </td>
+
+          </tr>
+
+        `)
+        .join("");
+
+}
+
+
+/* =====================================================
+   STOCK OUT
+===================================================== */
+
+async function processSale() {
+
+  document
+    .getElementById("saleMessage")
+    .textContent =
+      "POS transaction endpoint should be enabled next.";
+
+}
+
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+function toggleSidebar() {
+
+  const sidebar =
+    document.getElementById("sidebar");
+
+  const overlay =
+    document.getElementById("overlay");
+
+
+  sidebar.classList.toggle("open");
+
+  overlay.classList.toggle("hidden");
+
+}
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+function logout() {
+
+  sessionStorage.removeItem(
+    "diamondUser"
+  );
+
+  location.reload();
+
+}
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+function formatDate(value) {
+
+  if (!value)
+    return "";
+
+  const date =
+    new Date(value);
+
+  if (isNaN(date))
+    return String(value);
+
+  return date.toLocaleDateString(
+    "en-PH"
+  );
+}
+
+
+/* =====================================================
+   NAV BUTTON STYLE
+===================================================== */
+
+document
+  .querySelectorAll(".nav-btn")
+  .forEach(btn => {
+
+    btn.className +=
+      " w-full text-left px-4 py-3 rounded-xl " +
+      "hover:bg-slate-800 transition text-sm";
+
+  });
+
+
+/* =====================================================
+   AUTO LOGIN FROM SESSION
+===================================================== */
+
+const savedUser =
+  sessionStorage.getItem(
+    "diamondUser"
+  );
+
+
+if (savedUser) {
+
+  try {
+
+    currentUser =
+      JSON.parse(savedUser);
+
+    initializeApp();
+
+  } catch(error) {
+
+    sessionStorage.removeItem(
+      "diamondUser"
+    );
+
+  }
+
+}
+
 </script>
+
 </body>
+
 </html>
