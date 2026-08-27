@@ -17,20 +17,3146 @@
    GITHUB FRONTEND → GOOGLE APPS SCRIPT BACKEND
 ========================================================= */
 
-const APPS_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzyUniWHvgZaPx4yvnfzUSt3SLGaymR2kSPLTd4YcjP_5JV-tji-F-PHu_fcKHNOuuBGQ/exec";
-
+<script>
 
 /* =========================================================
-   GLOBAL SESSION
+   DIAMOND STORE
+   GITHUB / VERCEL → GOOGLE APPS SCRIPT
 ========================================================= */
 
-let currentUser = null;
-let currentRole = null;
-let sessionToken = null;
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzyUniWHvgZaPx4yvnfzUSt3SLGaymR2kSPLTd4YcjP_5JV-tji-F-PHu_fcKHNOuuBGQ/exec";
+
+
+let SESSION_TOKEN = "";
+
+let CURRENT_USER = null;
+
+let RICE = [];
+
+let SUPPLIERS = [];
+
+let ACCOUNTS = [];
 
 
 /* =========================================================
+   MODULE TITLES
+========================================================= */
+
+const MODULE_TITLES = {
+
+  dashboard:
+    "Dashboard",
+
+  rice:
+    "Rice Stock Directory",
+
+  stockin:
+    "Stock In",
+
+  stockout:
+    "Stock Out / POS",
+
+  suppliers:
+    "Supplier Management",
+
+  spoilage:
+    "Spoilage & Quality Tracker",
+
+  accounts:
+    "Account Management"
+
+};
+
+
+/* =========================================================
+   API REQUEST
+========================================================= */
+
+async function server(
+  action,
+  data = {}
+) {
+
+  const payload = {
+
+    action:
+      action,
+
+    token:
+      SESSION_TOKEN,
+
+    ...data
+
+  };
+
+
+  try {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+
+          method:
+            "POST",
+
+          redirect:
+            "follow",
+
+          headers: {
+
+            "Content-Type":
+              "text/plain;charset=utf-8"
+
+          },
+
+          body:
+            JSON.stringify(
+              payload
+            )
+
+        }
+      );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "HTTP " +
+        response.status
+      );
+
+    }
+
+
+    const text =
+      await response.text();
+
+
+    if (!text) {
+
+      throw new Error(
+        "Empty response from Apps Script."
+      );
+
+    }
+
+
+    try {
+
+      return JSON.parse(
+        text
+      );
+
+    } catch (parseError) {
+
+      console.error(
+        "Invalid JSON:",
+        text
+      );
+
+      throw new Error(
+        "Apps Script returned an invalid response."
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "API ERROR:",
+      error
+    );
+
+
+    throw error;
+
+  }
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+document
+  .getElementById(
+    "loginForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+
+      const username =
+        document
+          .getElementById(
+            "loginUsername"
+          )
+          .value
+          .trim();
+
+
+      const password =
+        document
+          .getElementById(
+            "loginPassword"
+          )
+          .value;
+
+
+      const message =
+        document
+          .getElementById(
+            "loginMessage"
+          );
+
+
+      message.className =
+        "rounded-xl p-3 text-sm text-center bg-slate-100 text-slate-600";
+
+
+      message.textContent =
+        "Signing in...";
+
+
+      message.classList.remove(
+        "hidden"
+      );
+
+
+      try {
+
+        const result =
+          await server(
+            "login",
+            {
+
+              username:
+                username,
+
+              password:
+                password
+
+            }
+          );
+
+
+        if (
+          !result.success
+        ) {
+
+          message.className =
+            "rounded-xl p-3 text-sm text-center bg-red-50 text-red-700";
+
+
+          message.textContent =
+            result.message;
+
+
+          return;
+
+        }
+
+
+        SESSION_TOKEN =
+          result.token;
+
+
+        CURRENT_USER =
+          result.user;
+
+
+        localStorage.setItem(
+
+          "diamond_session",
+
+          SESSION_TOKEN
+
+        );
+
+
+        initializeApplication();
+
+
+      } catch (error) {
+
+        message.className =
+          "rounded-xl p-3 text-sm text-center bg-red-50 text-red-700";
+
+
+        message.textContent =
+          "Unable to connect to the server.";
+
+
+        console.error(
+          error
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   INITIALIZE APPLICATION
+========================================================= */
+
+async function initializeApplication() {
+
+  document
+    .getElementById(
+      "loginScreen"
+    )
+    .classList
+    .add("hidden");
+
+
+  document
+    .getElementById(
+      "appScreen"
+    )
+    .classList
+    .remove("hidden");
+
+
+  document
+    .getElementById(
+      "sidebarUsername"
+    )
+    .textContent =
+    CURRENT_USER.fullName;
+
+
+  document
+    .getElementById(
+      "sidebarRole"
+    )
+    .textContent =
+    CURRENT_USER.role;
+
+
+  document
+    .getElementById(
+      "desktopUsername"
+    )
+    .textContent =
+    CURRENT_USER.fullName;
+
+
+  document
+    .getElementById(
+      "desktopRole"
+    )
+    .textContent =
+    CURRENT_USER.role;
+
+
+  document
+    .getElementById(
+      "mobileUserRole"
+    )
+    .textContent =
+    CURRENT_USER.fullName +
+    " • " +
+    CURRENT_USER.role;
+
+
+  applyRoleAccess();
+
+
+  try {
+
+    await loadData();
+
+    showModule(
+      "dashboard"
+    );
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+    alert(
+      "Unable to load Diamond Store data."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ROLE ACCESS
+========================================================= */
+
+function applyRoleAccess() {
+
+  const isAdmin =
+    String(
+      CURRENT_USER.role
+    ).toLowerCase() ===
+    "admin";
+
+
+  document
+    .querySelectorAll(
+      ".admin-only"
+    )
+    .forEach(
+      element => {
+
+        if (isAdmin) {
+
+          element
+            .classList
+            .remove("hidden");
+
+        } else {
+
+          element
+            .classList
+            .add("hidden");
+
+        }
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   SESSION RESTORE
+========================================================= */
+
+async function restoreSession() {
+
+  const token =
+    localStorage.getItem(
+      "diamond_session"
+    );
+
+
+  if (!token) {
+
+    return;
+
+  }
+
+
+  SESSION_TOKEN =
+    token;
+
+
+  try {
+
+    const result =
+      await server(
+        "checkSession"
+      );
+
+
+    if (
+      result.success
+    ) {
+
+      CURRENT_USER =
+        result.user;
+
+
+      await initializeApplication();
+
+
+    } else {
+
+      clearSession();
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    clearSession();
+
+  }
+
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+async function logout() {
+
+  try {
+
+    if (
+      SESSION_TOKEN
+    ) {
+
+      await server(
+        "logout"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+  }
+
+
+  clearSession();
+
+
+  location.reload();
+
+}
+
+
+function clearSession() {
+
+  localStorage.removeItem(
+    "diamond_session"
+  );
+
+
+  SESSION_TOKEN =
+    "";
+
+
+  CURRENT_USER =
+    null;
+
+}
+
+
+/* =========================================================
+   PERMISSION CHECK
+========================================================= */
+
+function checkPermission(
+  module
+) {
+
+  if (!CURRENT_USER) {
+
+    return false;
+
+  }
+
+
+  const role =
+    String(
+      CURRENT_USER.role
+    )
+    .toLowerCase();
+
+
+  if (
+    role === "admin"
+  ) {
+
+    return true;
+
+  }
+
+
+  if (
+    role === "cashier"
+  ) {
+
+    return [
+
+      "dashboard",
+
+      "stockout"
+
+    ].includes(
+      module
+    );
+
+  }
+
+
+  return false;
+
+}
+
+
+/* =========================================================
+   MODULE NAVIGATION
+========================================================= */
+
+function showModule(
+  module
+) {
+
+  if (
+    !checkPermission(
+      module
+    )
+  ) {
+
+    alert(
+      "You do not have permission to access this module."
+    );
+
+
+    return;
+
+  }
+
+
+  document
+    .querySelectorAll(
+      ".module"
+    )
+    .forEach(
+      element => {
+
+        element
+          .classList
+          .add("hidden");
+
+      }
+    );
+
+
+  const selected =
+    document
+      .getElementById(
+        "module-" +
+        module
+      );
+
+
+  if (selected) {
+
+    selected
+      .classList
+      .remove("hidden");
+
+  }
+
+
+  document
+    .querySelectorAll(
+      ".nav-btn"
+    )
+    .forEach(
+      button => {
+
+        button
+          .classList
+          .remove(
+            "bg-green-100",
+            "text-green-800"
+          );
+
+      }
+    );
+
+
+  const active =
+    document
+      .querySelector(
+        `.nav-btn[data-module="${module}"]`
+      );
+
+
+  if (active) {
+
+    active
+      .classList
+      .add(
+        "bg-green-100",
+        "text-green-800"
+      );
+
+  }
+
+
+  const pageTitle =
+    document
+      .getElementById(
+        "pageTitle"
+      );
+
+
+  if (pageTitle) {
+
+    pageTitle.textContent =
+      MODULE_TITLES[
+        module
+      ] ||
+      "Dashboard";
+
+  }
+
+
+  if (
+    window.innerWidth <
+    1024
+  ) {
+
+    closeSidebar();
+
+  }
+
+
+  if (
+    module ===
+    "dashboard"
+  ) {
+
+    loadDashboard();
+
+  }
+
+
+  if (
+    module ===
+    "rice"
+  ) {
+
+    renderRiceTable();
+
+  }
+
+
+  if (
+    module ===
+    "stockin"
+  ) {
+
+    populateStockIn();
+
+  }
+
+
+  if (
+    module ===
+    "stockout"
+  ) {
+
+    populateSaleRice();
+
+  }
+
+
+  if (
+    module ===
+    "suppliers"
+  ) {
+
+    renderSuppliers();
+
+  }
+
+
+  if (
+    module ===
+    "spoilage"
+  ) {
+
+    populateSpoilageRice();
+
+  }
+
+
+  if (
+    module ===
+    "accounts"
+  ) {
+
+    loadAccounts();
+
+  }
+
+}
+
+
+/* =========================================================
+   LOAD INITIAL DATA
+========================================================= */
+
+async function loadData() {
+
+  const result =
+    await server(
+      "getInitialData"
+    );
+
+
+  if (
+    !result.success
+  ) {
+
+    throw new Error(
+      result.message
+    );
+
+  }
+
+
+  RICE =
+    result.rice ||
+    [];
+
+
+  SUPPLIERS =
+    result.suppliers ||
+    [];
+
+
+  ACCOUNTS =
+    result.accounts ||
+    [];
+
+
+  populateFilters();
+
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+async function loadDashboard() {
+
+  try {
+
+    const result =
+      await server(
+        "getDashboard"
+      );
+
+
+    if (
+      !result.success
+    ) {
+
+      return;
+
+    }
+
+
+    document
+      .getElementById(
+        "statSacks"
+      )
+      .textContent =
+      Number(
+        result.totalSacks
+      )
+      .toLocaleString(
+        "en-PH"
+      );
+
+
+    document
+      .getElementById(
+        "statRevenue"
+      )
+      .textContent =
+      formatCurrency(
+        result.dailyRevenue
+      );
+
+
+    document
+      .getElementById(
+        "statVarieties"
+      )
+      .textContent =
+      result.varietyCount;
+
+
+    document
+      .getElementById(
+        "statLowStock"
+      )
+      .textContent =
+      result.lowStock.length;
+
+
+    const list =
+      document
+        .getElementById(
+          "lowStockList"
+        );
+
+
+    if (
+      !result.lowStock.length
+    ) {
+
+      list.innerHTML = `
+
+        <div class="p-4 bg-green-50 text-green-700 rounded-xl">
+
+          ✓ All rice products are above the low-stock threshold.
+
+        </div>
+
+      `;
+
+
+      return;
+
+    }
+
+
+    list.innerHTML =
+      result
+        .lowStock
+        .map(
+          item => `
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border-b last:border-0">
+
+              <div>
+
+                <p class="font-bold">
+                  ${escapeHtml(item.variety)}
+                </p>
+
+                <p class="text-xs text-slate-500">
+
+                  ${escapeHtml(item.brand)}
+                  •
+                  ${escapeHtml(item.grade)}
+                  •
+                  ${item.size}kg
+
+                </p>
+
+              </div>
+
+              <span class="inline-block px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+
+                ${item.sacks} sacks left
+
+              </span>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   RICE FILTERS
+========================================================= */
+
+function populateFilters() {
+
+  const brands =
+    [
+      ...new Set(
+        RICE.map(
+          r => r.brand
+        )
+      )
+    ];
+
+
+  const grades =
+    [
+      ...new Set(
+        RICE.map(
+          r => r.grade
+        )
+      )
+    ];
+
+
+  const brandSelect =
+    document
+      .getElementById(
+        "riceBrandFilter"
+      );
+
+
+  const gradeSelect =
+    document
+      .getElementById(
+        "riceGradeFilter"
+      );
+
+
+  if (!brandSelect ||
+      !gradeSelect) {
+
+    return;
+
+  }
+
+
+  brandSelect.innerHTML =
+
+    `<option value="">
+       All Brands
+     </option>` +
+
+    brands
+      .map(
+        brand => `
+
+          <option value="${escapeAttr(brand)}">
+
+            ${escapeHtml(brand)}
+
+          </option>
+
+        `
+      )
+      .join("");
+
+
+  gradeSelect.innerHTML =
+
+    `<option value="">
+       All Grades
+     </option>` +
+
+    grades
+      .map(
+        grade => `
+
+          <option value="${escapeAttr(grade)}">
+
+            ${escapeHtml(grade)}
+
+          </option>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   RICE TABLE
+========================================================= */
+
+function renderRiceTable() {
+
+  const searchInput =
+    document
+      .getElementById(
+        "riceSearch"
+      );
+
+
+  const brandInput =
+    document
+      .getElementById(
+        "riceBrandFilter"
+      );
+
+
+  const gradeInput =
+    document
+      .getElementById(
+        "riceGradeFilter"
+      );
+
+
+  const tbody =
+    document
+      .getElementById(
+        "riceTableBody"
+      );
+
+
+  if (
+    !searchInput ||
+    !brandInput ||
+    !gradeInput ||
+    !tbody
+  ) {
+
+    return;
+
+  }
+
+
+  const search =
+    searchInput
+      .value
+      .toLowerCase();
+
+
+  const brand =
+    brandInput
+      .value;
+
+
+  const grade =
+    gradeInput
+      .value;
+
+
+  const filtered =
+    RICE.filter(
+      rice => {
+
+        const text =
+
+          `${rice.variety}
+           ${rice.brand}
+           ${rice.grade}
+           ${rice.size}`
+
+          .toLowerCase();
+
+
+        return (
+
+          text.includes(
+            search
+          )
+
+          &&
+
+          (
+            !brand ||
+            rice.brand === brand
+          )
+
+          &&
+
+          (
+            !grade ||
+            rice.grade === grade
+          )
+
+        );
+
+      }
+    );
+
+
+  if (
+    !filtered.length
+  ) {
+
+    tbody.innerHTML = `
+
+      <tr>
+
+        <td colspan="7"
+            class="p-8 text-center text-slate-500">
+
+          No rice products found.
+
+        </td>
+
+      </tr>
+
+    `;
+
+
+    return;
+
+  }
+
+
+  tbody.innerHTML =
+    filtered
+      .map(
+        rice => `
+
+          <tr class="border-t">
+
+            <td class="p-4 font-semibold">
+
+              ${escapeHtml(
+                rice.variety
+              )}
+
+            </td>
+
+            <td class="p-4">
+
+              ${escapeHtml(
+                rice.brand
+              )}
+
+            </td>
+
+            <td class="p-4">
+
+              ${escapeHtml(
+                rice.grade
+              )}
+
+            </td>
+
+            <td class="p-4">
+
+              ${rice.size}kg
+
+            </td>
+
+            <td class="p-4 font-bold">
+
+              ${rice.sacks}
+
+            </td>
+
+            <td class="p-4">
+
+              ${formatCurrency(
+                rice.price
+              )}
+
+            </td>
+
+            <td class="p-4 text-right">
+
+              <button
+
+                onclick="editRice('${escapeAttr(rice.id)}')"
+
+                class="text-green-700 font-semibold">
+
+                Edit
+
+              </button>
+
+              <button
+
+                onclick="removeRice('${escapeAttr(rice.id)}')"
+
+                class="ml-3 text-red-600 font-semibold">
+
+                Delete
+
+              </button>
+
+            </td>
+
+          </tr>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   ADD RICE
+========================================================= */
+
+function openRiceModal() {
+
+  document
+    .getElementById(
+      "riceModalTitle"
+    )
+    .textContent =
+    "Add Rice";
+
+
+  document
+    .getElementById(
+      "riceForm"
+    )
+    .reset();
+
+
+  document
+    .getElementById(
+      "riceId"
+    )
+    .value = "";
+
+
+  document
+    .getElementById(
+      "riceModal"
+    )
+    .classList
+    .remove("hidden");
+
+}
+
+
+/* =========================================================
+   EDIT RICE
+========================================================= */
+
+function editRice(
+  id
+) {
+
+  const rice =
+    RICE.find(
+      r =>
+        r.id === id
+    );
+
+
+  if (!rice) {
+
+    return;
+
+  }
+
+
+  document
+    .getElementById(
+      "riceModalTitle"
+    )
+    .textContent =
+    "Edit Rice";
+
+
+  document
+    .getElementById(
+      "riceId"
+    )
+    .value =
+    rice.id;
+
+
+  document
+    .getElementById(
+      "riceVariety"
+    )
+    .value =
+    rice.variety;
+
+
+  document
+    .getElementById(
+      "riceBrand"
+    )
+    .value =
+    rice.brand;
+
+
+  document
+    .getElementById(
+      "riceGrade"
+    )
+    .value =
+    rice.grade;
+
+
+  document
+    .getElementById(
+      "riceSize"
+    )
+    .value =
+    rice.size;
+
+
+  document
+    .getElementById(
+      "riceSacks"
+    )
+    .value =
+    rice.sacks;
+
+
+  document
+    .getElementById(
+      "ricePrice"
+    )
+    .value =
+    rice.price;
+
+
+  document
+    .getElementById(
+      "riceThreshold"
+    )
+    .value =
+    rice.threshold;
+
+
+  document
+    .getElementById(
+      "riceModal"
+    )
+    .classList
+    .remove("hidden");
+
+}
+
+
+/* =========================================================
+   SAVE RICE FORM
+========================================================= */
+
+document
+  .getElementById(
+    "riceForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+
+      const data = {
+
+        id:
+          document
+            .getElementById(
+              "riceId"
+            )
+            .value,
+
+        variety:
+          document
+            .getElementById(
+              "riceVariety"
+            )
+            .value
+            .trim(),
+
+        brand:
+          document
+            .getElementById(
+              "riceBrand"
+            )
+            .value
+            .trim(),
+
+        grade:
+          document
+            .getElementById(
+              "riceGrade"
+            )
+            .value,
+
+        size:
+          Number(
+            document
+              .getElementById(
+                "riceSize"
+              )
+              .value
+          ),
+
+        sacks:
+          Number(
+            document
+              .getElementById(
+                "riceSacks"
+              )
+              .value
+          ),
+
+        price:
+          Number(
+            document
+              .getElementById(
+                "ricePrice"
+              )
+              .value
+          ),
+
+        threshold:
+          Number(
+            document
+              .getElementById(
+                "riceThreshold"
+              )
+              .value
+          )
+
+      };
+
+
+      try {
+
+        const result =
+          await server(
+            "saveRice",
+            {
+              data:
+                data
+            }
+          );
+
+
+        if (
+          !result.success
+        ) {
+
+          alert(
+            result.message
+          );
+
+          return;
+
+        }
+
+
+        closeModal(
+          "riceModal"
+        );
+
+
+        await loadData();
+
+
+        renderRiceTable();
+
+
+        loadDashboard();
+
+
+        alert(
+          "Rice product saved successfully."
+        );
+
+
+      } catch (error) {
+
+        alert(
+          error.message
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   DELETE RICE
+========================================================= */
+
+async function removeRice(
+  id
+) {
+
+  if (
+    !confirm(
+      "Remove this rice product?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const result =
+      await server(
+        "deleteRice",
+        {
+          id:
+            id
+        }
+      );
+
+
+    if (
+      !result.success
+    ) {
+
+      alert(
+        result.message
+      );
+
+      return;
+
+    }
+
+
+    await loadData();
+
+
+    renderRiceTable();
+
+
+    loadDashboard();
+
+
+  } catch (error) {
+
+    alert(
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   STOCK IN DROPDOWNS
+========================================================= */
+
+function populateStockIn() {
+
+  const riceSelect =
+    document
+      .getElementById(
+        "stockInRice"
+      );
+
+
+  const supplierSelect =
+    document
+      .getElementById(
+        "stockInSupplier"
+      );
+
+
+  if (
+    riceSelect
+  ) {
+
+    riceSelect.innerHTML =
+
+      `<option value="">
+         Select rice
+       </option>` +
+
+      RICE
+        .map(
+          rice => `
+
+            <option value="${escapeAttr(rice.id)}">
+
+              ${escapeHtml(rice.variety)}
+              -
+              ${escapeHtml(rice.brand)}
+              (${rice.size}kg)
+
+            </option>
+
+          `
+        )
+        .join("");
+
+  }
+
+
+  if (
+    supplierSelect
+  ) {
+
+    supplierSelect.innerHTML =
+
+      `<option value="">
+         Select supplier
+       </option>` +
+
+      SUPPLIERS
+        .map(
+          supplier => `
+
+            <option value="${escapeAttr(supplier.id)}">
+
+              ${escapeHtml(supplier.name)}
+
+            </option>
+
+          `
+        )
+        .join("");
+
+  }
+
+}
+
+
+/* =========================================================
+   STOCK IN FORM
+========================================================= */
+
+document
+  .getElementById(
+    "stockInForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+
+      const data = {
+
+        riceId:
+          document
+            .getElementById(
+              "stockInRice"
+            )
+            .value,
+
+        sacks:
+          Number(
+            document
+              .getElementById(
+                "stockInSacks"
+              )
+              .value
+          ),
+
+        cost:
+          Number(
+            document
+              .getElementById(
+                "stockInCost"
+              )
+              .value
+          ),
+
+        supplierId:
+          document
+            .getElementById(
+              "stockInSupplier"
+            )
+            .value,
+
+        notes:
+          document
+            .getElementById(
+              "stockInNotes"
+            )
+            .value
+            .trim()
+
+      };
+
+
+      try {
+
+        const result =
+          await server(
+            "stockIn",
+            {
+              data:
+                data
+            }
+          );
+
+
+        showMessage(
+
+          "stockInMessage",
+
+          result.success,
+
+          result.message
+
+        );
+
+
+        if (
+          result.success
+        ) {
+
+          this.reset();
+
+
+          await loadData();
+
+
+          populateStockIn();
+
+
+          loadDashboard();
+
+        }
+
+
+      } catch (error) {
+
+        showMessage(
+
+          "stockInMessage",
+
+          false,
+
+          error.message
+
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   POS
+========================================================= */
+
+function populateSaleRice() {
+
+  const select =
+    document
+      .getElementById(
+        "saleRice"
+      );
+
+
+  if (!select) {
+
+    return;
+
+  }
+
+
+  select.innerHTML =
+
+    `<option value="">
+       Select rice
+     </option>` +
+
+    RICE
+      .map(
+        rice => `
+
+          <option value="${escapeAttr(rice.id)}">
+
+            ${escapeHtml(rice.variety)}
+            -
+            ${escapeHtml(rice.brand)}
+            (${rice.size}kg)
+            •
+            ${rice.sacks} sacks
+
+          </option>
+
+        `
+      )
+      .join("");
+
+
+  updateSalePrice();
+
+}
+
+
+/* =========================================================
+   UPDATE SALE PRICE
+========================================================= */
+
+function updateSalePrice() {
+
+  const riceId =
+    document
+      .getElementById(
+        "saleRice"
+      )
+      .value;
+
+
+  const type =
+    document
+      .querySelector(
+        'input[name="saleType"]:checked'
+      )
+      ?.value ||
+    "kilo";
+
+
+  const rice =
+    RICE.find(
+      r =>
+        r.id === riceId
+    );
+
+
+  if (!rice) {
+
+    document
+      .getElementById(
+        "saleUnitPrice"
+      )
+      .textContent =
+      "₱0.00";
+
+
+    document
+      .getElementById(
+        "saleTotal"
+      )
+      .textContent =
+      "₱0.00";
+
+
+    return;
+
+  }
+
+
+  let price;
+
+
+  if (
+    type === "sack"
+  ) {
+
+    price =
+      Number(
+        rice.price
+      ) *
+      Number(
+        rice.size
+      );
+
+  } else {
+
+    price =
+      Number(
+        rice.price
+      );
+
+  }
+
+
+  document
+    .getElementById(
+      "saleUnitPrice"
+    )
+    .textContent =
+    formatCurrency(
+      price
+    );
+
+
+  calculateSaleTotal();
+
+}
+
+
+/* =========================================================
+   SALE TOTAL
+========================================================= */
+
+function calculateSaleTotal() {
+
+  const riceId =
+    document
+      .getElementById(
+        "saleRice"
+      )
+      .value;
+
+
+  const type =
+    document
+      .querySelector(
+        'input[name="saleType"]:checked'
+      )
+      ?.value ||
+    "kilo";
+
+
+  const quantity =
+    Number(
+      document
+        .getElementById(
+          "saleQuantity"
+        )
+        .value
+    ) || 0;
+
+
+  const rice =
+    RICE.find(
+      r =>
+        r.id === riceId
+    );
+
+
+  if (!rice) {
+
+    document
+      .getElementById(
+        "saleTotal"
+      )
+      .textContent =
+      "₱0.00";
+
+
+    return;
+
+  }
+
+
+  const unitPrice =
+    type === "sack"
+
+      ?
+
+      Number(rice.price) *
+      Number(rice.size)
+
+      :
+
+      Number(rice.price);
+
+
+  document
+    .getElementById(
+      "saleTotal"
+    )
+    .textContent =
+    formatCurrency(
+      unitPrice *
+      quantity
+    );
+
+}
+
+
+/* =========================================================
+   SALE FORM
+========================================================= */
+
+document
+  .getElementById(
+    "saleForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+
+      const data = {
+
+        riceId:
+          document
+            .getElementById(
+              "saleRice"
+            )
+            .value,
+
+        type:
+          document
+            .querySelector(
+              'input[name="saleType"]:checked'
+            )
+            .value,
+
+        quantity:
+          Number(
+            document
+              .getElementById(
+                "saleQuantity"
+              )
+              .value
+          )
+
+      };
+
+
+      if (
+        !data.riceId ||
+        data.quantity <= 0
+      ) {
+
+        alert(
+          "Please enter a valid sale."
+        );
+
+
+        return;
+
+      }
+
+
+      try {
+
+        const result =
+          await server(
+            "processSale",
+            {
+              data:
+                data
+            }
+          );
+
+
+        showMessage(
+
+          "saleMessage",
+
+          result.success,
+
+          result.success
+
+            ?
+
+            result.message +
+            " Total: " +
+            formatCurrency(
+              result.total
+            )
+
+            :
+
+            result.message
+
+        );
+
+
+        if (
+          result.success
+        ) {
+
+          this.reset();
+
+
+          document
+            .querySelector(
+              'input[name="saleType"][value="kilo"]'
+            )
+            .checked =
+            true;
+
+
+          await loadData();
+
+
+          populateSaleRice();
+
+
+          loadDashboard();
+
+        }
+
+
+      } catch (error) {
+
+        showMessage(
+
+          "saleMessage",
+
+          false,
+
+          error.message
+
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   SUPPLIERS
+========================================================= */
+
+function renderSuppliers() {
+
+  const container =
+    document
+      .getElementById(
+        "supplierCards"
+      );
+
+
+  if (!container) {
+
+    return;
+
+  }
+
+
+  if (
+    !SUPPLIERS.length
+  ) {
+
+    container.innerHTML = `
+
+      <div class="col-span-full p-8 text-center text-slate-500">
+
+        No suppliers registered.
+
+      </div>
+
+    `;
+
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    SUPPLIERS
+      .map(
+        supplier => `
+
+          <div class="bg-white rounded-2xl border shadow-sm p-5">
+
+            <div class="flex justify-between gap-3">
+
+              <div>
+
+                <h3 class="font-bold text-lg">
+
+                  ${escapeHtml(
+                    supplier.name
+                  )}
+
+                </h3>
+
+                <p class="text-sm text-slate-500 mt-1">
+
+                  ${escapeHtml(
+                    supplier.address ||
+                    "No address"
+                  )}
+
+                </p>
+
+              </div>
+
+              <span class="h-fit px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+
+                ${escapeHtml(
+                  supplier.status
+                )}
+
+              </span>
+
+            </div>
+
+
+            <div class="mt-5 space-y-2 text-sm">
+
+              <p>
+                📞
+                ${escapeHtml(
+                  supplier.contact
+                )}
+              </p>
+
+
+              <p>
+
+                💰 Current price:
+
+                <strong>
+
+                  ${formatCurrency(
+                    supplier.price
+                  )}
+
+                </strong>
+
+              </p>
+
+            </div>
+
+          </div>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   SUPPLIER MODAL
+========================================================= */
+
+function openSupplierModal() {
+
+  document
+    .getElementById(
+      "supplierForm"
+    )
+    .reset();
+
+
+  document
+    .getElementById(
+      "supplierModal"
+    )
+    .classList
+    .remove("hidden");
+
+}
+
+
+/* =========================================================
+   SAVE SUPPLIER
+========================================================= */
+
+document
+  .getElementById(
+    "supplierForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+
+      const data = {
+
+        name:
+          document
+            .getElementById(
+              "supplierName"
+            )
+            .value
+            .trim(),
+
+        contact:
+          document
+            .getElementById(
+              "supplierContact"
+            )
+            .value
+            .trim(),
+
+        address:
+          document
+            .getElementById(
+              "supplierAddress"
+            )
+            .value
+            .trim(),
+
+        price:
+          Number(
+            document
+              .getElementById(
+                "supplierPrice"
+              )
+              .value
+          ) || 0
+
+      };
+
+
+      try {
+
+        const result =
+          await server(
+            "saveSupplier",
+            {
+              data:
+                data
+            }
+          );
+
+
+        if (
+          !result.success
+        ) {
+
+          alert(
+            result.message
+          );
+
+          return;
+
+        }
+
+
+        closeModal(
+          "supplierModal"
+        );
+
+
+        await loadData();
+
+
+        renderSuppliers();
+
+
+        populateStockIn();
+
+
+        alert(
+          "Supplier saved successfully."
+        );
+
+
+      } catch (error) {
+
+        alert(
+          error.message
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   SPOILAGE
+========================================================= */
+
+function populateSpoilageRice() {
+
+  const select =
+    document
+      .getElementById(
+        "spoilageRice"
+      );
+
+
+  if (!select) {
+
+    return;
+
+  }
+
+
+  select.innerHTML =
+
+    `<option value="">
+       Select rice
+     </option>` +
+
+    RICE
+      .map(
+        rice => `
+
+          <option value="${escapeAttr(rice.id)}">
+
+            ${escapeHtml(rice.variety)}
+            -
+            ${escapeHtml(rice.brand)}
+            (${rice.size}kg)
+
+          </option>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   SPOILAGE FORM
+========================================================= */
+
+document
+  .getElementById(
+    "spoilageForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+
+      const data = {
+
+        riceId:
+          document
+            .getElementById(
+              "spoilageRice"
+            )
+            .value,
+
+        quantity:
+          Number(
+            document
+              .getElementById(
+                "spoilageQuantity"
+              )
+              .value
+          ),
+
+        reason:
+          document
+            .getElementById(
+              "spoilageReason"
+            )
+            .value,
+
+        remarks:
+          document
+            .getElementById(
+              "spoilageRemarks"
+            )
+            .value
+            .trim()
+
+      };
+
+
+      try {
+
+        const result =
+          await server(
+            "recordSpoilage",
+            {
+              data:
+                data
+            }
+          );
+
+
+        showMessage(
+
+          "spoilageMessage",
+
+          result.success,
+
+          result.message
+
+        );
+
+
+        if (
+          result.success
+        ) {
+
+          this.reset();
+
+
+          await loadData();
+
+
+          populateSpoilageRice();
+
+
+          loadDashboard();
+
+        }
+
+
+      } catch (error) {
+
+        showMessage(
+
+          "spoilageMessage",
+
+          false,
+
+          error.message
+
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   ACCOUNTS
+========================================================= */
+
+async function loadAccounts() {
+
+  if (
+    !CURRENT_USER ||
+    CURRENT_USER.role !==
+    "Admin"
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const result =
+      await server(
+        "getAccounts"
+      );
+
+
+    if (
+      !result.success
+    ) {
+
+      alert(
+        result.message
+      );
+
+
+      return;
+
+    }
+
+
+    ACCOUNTS =
+      result.accounts ||
+      [];
+
+
+    const tbody =
+      document
+        .getElementById(
+          "accountsTableBody"
+        );
+
+
+    if (
+      tbody
+    ) {
+
+      tbody.innerHTML =
+
+        ACCOUNTS
+          .map(
+            account => `
+
+              <tr class="border-t">
+
+                <td class="p-4 font-semibold">
+
+                  ${escapeHtml(
+                    account.username
+                  )}
+
+                </td>
+
+                <td class="p-4">
+
+                  ${escapeHtml(
+                    account.fullName
+                  )}
+
+                </td>
+
+                <td class="p-4">
+
+                  <span class="px-3 py-1 rounded-full ${
+                    account.role === "Admin"
+
+                      ?
+
+                      "bg-purple-100 text-purple-700"
+
+                      :
+
+                      "bg-blue-100 text-blue-700"
+                  }">
+
+                    ${escapeHtml(
+                      account.role
+                    )}
+
+                  </span>
+
+                </td>
+
+                <td class="p-4">
+
+                  <span class="${
+                    account.status === "Active"
+
+                      ?
+
+                      "text-green-700"
+
+                      :
+
+                      "text-red-600"
+                  } font-semibold">
+
+                    ${escapeHtml(
+                      account.status
+                    )}
+
+                  </span>
+
+                </td>
+
+                <td class="p-4">
+
+                  ${escapeHtml(
+                    account.createdAt
+                  )}
+
+                </td>
+
+              </tr>
+
+            `
+          )
+          .join("");
+
+    }
+
+
+    const logs =
+      result.logs ||
+      [];
+
+
+    const logsList =
+      document
+        .getElementById(
+          "logsList"
+        );
+
+
+    if (
+      logsList
+    ) {
+
+      logsList.innerHTML =
+
+        logs
+          .map(
+            log => `
+
+              <div class="p-4">
+
+                <p class="font-semibold">
+
+                  ${escapeHtml(
+                    log.action
+                  )}
+
+                </p>
+
+                <p class="text-sm text-slate-600">
+
+                  ${escapeHtml(
+                    log.details
+                  )}
+
+                </p>
+
+                <p class="text-xs text-slate-500 mt-1">
+
+                  ${escapeHtml(
+                    log.username
+                  )}
+
+                  •
+
+                  ${escapeHtml(
+                    log.timestamp
+                  )}
+
+                </p>
+
+              </div>
+
+            `
+          )
+          .join("");
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ACCOUNT MODAL
+========================================================= */
+
+function openAccountModal() {
+
+  document
+    .getElementById(
+      "accountForm"
+    )
+    .reset();
+
+
+  document
+    .getElementById(
+      "accountModal"
+    )
+    .classList
+    .remove("hidden");
+
+}
+
+
+/* =========================================================
+   CREATE ACCOUNT
+========================================================= */
+
+document
+  .getElementById(
+    "accountForm"
+  )
+  .addEventListener(
+    "submit",
+    async function(e) {
+
+      e.preventDefault();
+
+
+      const data = {
+
+        fullName:
+          document
+            .getElementById(
+              "accountName"
+            )
+            .value
+            .trim(),
+
+        username:
+          document
+            .getElementById(
+              "accountUsername"
+            )
+            .value
+            .trim(),
+
+        password:
+          document
+            .getElementById(
+              "accountPassword"
+            )
+            .value,
+
+        role:
+          document
+            .getElementById(
+              "accountRole"
+            )
+            .value
+
+      };
+
+
+      try {
+
+        const result =
+          await server(
+            "createAccount",
+            {
+              data:
+                data
+            }
+          );
+
+
+        if (
+          !result.success
+        ) {
+
+          alert(
+            result.message
+          );
+
+
+          return;
+
+        }
+
+
+        closeModal(
+          "accountModal"
+        );
+
+
+        await loadAccounts();
+
+
+        alert(
+          "Employee account created successfully."
+        );
+
+
+      } catch (error) {
+
+        alert(
+          error.message
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   UI HELPERS
+========================================================= */
+
+function formatCurrency(
+  value
+) {
+
+  return new Intl.NumberFormat(
+
+    "en-PH",
+
+    {
+
+      style:
+        "currency",
+
+      currency:
+        "PHP"
+
+    }
+
+  ).format(
+    Number(value) || 0
+  );
+
+}
+
+
+function showMessage(
+  id,
+  success,
+  message
+) {
+
+  const element =
+    document
+      .getElementById(
+        id
+      );
+
+
+  if (!element) {
+
+    return;
+
+  }
+
+
+  element.className =
+
+    "mt-4 p-3 rounded-xl text-sm " +
+
+    (
+      success
+
+        ?
+
+        "bg-green-50 text-green-700"
+
+        :
+
+        "bg-red-50 text-red-700"
+
+    );
+
+
+  element.textContent =
+    message;
+
+
+  element.classList
+    .remove(
+      "hidden"
+    );
+
+}
+
+
+function closeModal(
+  id
+) {
+
+  const modal =
+    document
+      .getElementById(
+        id
+      );
+
+
+  if (modal) {
+
+    modal
+      .classList
+      .add("hidden");
+
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE SIDEBAR
+========================================================= */
+
+function toggleSidebar() {
+
+  const sidebar =
+    document
+      .getElementById(
+        "sidebar"
+      );
+
+
+  const overlay =
+    document
+      .getElementById(
+        "sidebarOverlay"
+      );
+
+
+  sidebar
+    .classList
+    .toggle(
+      "-translate-x-full"
+    );
+
+
+  overlay
+    .classList
+    .toggle(
+      "hidden"
+    );
+
+}
+
+
+function closeSidebar() {
+
+  const sidebar =
+    document
+      .getElementById(
+        "sidebar"
+      );
+
+
+  const overlay =
+    document
+      .getElementById(
+        "sidebarOverlay"
+      );
+
+
+  sidebar
+    .classList
+    .add(
+      "-translate-x-full"
+    );
+
+
+  overlay
+    .classList
+    .add(
+      "hidden"
+    );
+
+}
+
+
+/* =========================================================
+   SECURITY HELPERS
+========================================================= */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+function escapeAttr(
+  value
+) {
+
+  return escapeHtml(
+    value
+  );
+
+}
+
+
+/* =========================================================
+   START APPLICATION
+========================================================= */
+
+restoreSession();
+
+</script>/* =========================================================
    API CONNECTOR
 ========================================================= */
 
