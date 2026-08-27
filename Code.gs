@@ -5,7 +5,7 @@ const APP_CONFIG = {
   SHEET_STOCKIN: "StockIn",
   SHEET_STOCKOUT: "StockOut",
   SHEET_USERS: "Users",
-  APP_TITLE: "Rice Inventory System"
+  APP_TITLE: "Diamond Store"
 };
 
 function doGet() {
