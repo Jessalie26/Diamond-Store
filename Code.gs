@@ -6,44 +6,50 @@ const APP_CONFIG = {
   APP_TITLE: "Diamond Store"
 };
 
-// ========== SERVE THE WEB APP ==========
+// ==========================================
+// SERVE WEB APP
+// ==========================================
 function doGet() {
   return HtmlService.createTemplateFromFile('index')
     .evaluate()
-    .setTitle(APP_CONFIG)
+    .setTitle(APP_CONFIG.APP_TITLE)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ========== INITIALIZE SHEETS (RUN ONCE MANUALLY) ==========
+// ==========================================
+// FEATURE 0: INITIALIZE DATABASE TABLES
+// ==========================================
 function initSheets() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
-  // Create Inventory Sheet
+  // Inventory Table
   let invSheet = ss.getSheetByName(APP_CONFIG.SHEET_INVENTORY) || ss.insertSheet(APP_CONFIG.SHEET_INVENTORY);
   invSheet.clearContents().clearFormats();
-  invSheet.getRange(1, 1, 1, 6).setValues([["ID", "Item Name", "Category", "Quantity (kg)", "Unit Price (₱)", "Reorder Level"]]);
+  invSheet.getRange(1, 1, 1, 6).setValues([["ID", "RiceName", "Category", "QuantityKG", "PricePerKG", "ReorderLevelKG"]]);
   
-  // Create Stock-In Sheet
+  // Stock-In Table
   let inSheet = ss.getSheetByName(APP_CONFIG.SHEET_STOCKIN) || ss.insertSheet(APP_CONFIG.SHEET_STOCKIN);
   inSheet.clearContents().clearFormats();
-  inSheet.getRange(1, 1, 1, 7).setValues([["Date", "RefNo", "ItemID", "ItemName", "QtyIn", "Supplier", "User"]]);
+  inSheet.getRange(1, 1, 1, 7).setValues([["Date", "RefNo", "RiceID", "RiceName", "QtyInKG", "Supplier", "UserEmail"]]);
   
-  // Create Stock-Out Sheet
+  // Stock-Out Table
   let outSheet = ss.getSheetByName(APP_CONFIG.SHEET_STOCKOUT) || ss.insertSheet(APP_CONFIG.SHEET_STOCKOUT);
   outSheet.clearContents().clearFormats();
-  outSheet.getRange(1, 1, 1, 7).setValues([["Date", "RefNo", "ItemID", "ItemName", "QtyOut", "Total Amount", "User"]]);
+  outSheet.getRange(1, 1, 1, 7).setValues([["Date", "RefNo", "RiceID", "RiceName", "QtyOutKG", "TotalAmount", "UserEmail"]]);
   
-  // Create Users Sheet (with Reset Code column)
+  // Users Table (with Reset Code column)
   let userSheet = ss.getSheetByName(APP_CONFIG.SHEET_USERS) || ss.insertSheet(APP_CONFIG.SHEET_USERS);
   userSheet.clearContents().clearFormats();
-  userSheet.getRange(1, 1, 1, 5).setValues([["Email", "PasswordHash", "Role", "Created", "ResetCode"]]);
+  userSheet.getRange(1, 1, 1, 5).setValues([["Email", "Password", "Role", "CreatedDate", "ResetCode"]]);
   
   SpreadsheetApp.getActiveSpreadsheet().toast("✅ System Ready!");
   return { success: true };
 }
 
-// ========== LOGIN / AUTHENTICATION ==========
+// ==========================================
+// FEATURE 1: 🔐 LOGIN / AUTHENTICATION
+// ==========================================
 function validateUser(email, password) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_USERS);
   const data = sheet.getDataRange().getValues();
@@ -57,8 +63,10 @@ function validateUser(email, password) {
   return { success: false, message: "Invalid email or password" };
 }
 
-// ========== CREATE NEW ACCOUNT (PUBLIC) ==========
-function createAccount(email, password, name) {
+// ==========================================
+// FEATURE 1A: ✍️ CREATE NEW ACCOUNT (PUBLIC)
+// ==========================================
+function createAccount(email, password, fullName) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_USERS);
   const data = sheet.getDataRange().getValues();
   email = email.toLowerCase().trim();
@@ -70,13 +78,15 @@ function createAccount(email, password, name) {
     }
   }
   
-  // First user = Admin, others = Staff
+  // First account = Admin, others = Staff
   const role = data.length <= 1 ? "admin" : "staff";
   sheet.appendRow([email, password, role, new Date(), ""]);
   return { success: true, role: role, message: "Account created successfully! You can now login." };
 }
 
-// ========== FORGOT PASSWORD — SEND RESET CODE ==========
+// ==========================================
+// FEATURE 1B: 🔑 FORGOT PASSWORD — SEND CODE
+// ==========================================
 function sendResetCode(email) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_USERS);
   const data = sheet.getDataRange().getValues();
@@ -84,26 +94,25 @@ function sendResetCode(email) {
   
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === email) {
-      // Generate 6-digit reset code
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const rowNum = i + 1;
-      sheet.getRange(rowNum, 5).setValue(code); // Save code in column E
+      sheet.getRange(i + 1, 5).setValue(code);
       
-      // Send email with reset code
       try {
-        GmailApp.sendEmail(email, "🔑 Diamond Store — Password Reset Code", 
-          `Hello,\n\nYou requested to reset your password for Diamond Store.\n\nYour reset code is: ${code}\n\nEnter this code in the app to set a new password.\n\nIf you did not request this, please ignore this email.\n\n— Diamond Store System`
+        GmailApp.sendEmail(email, "🔑 Diamond Store — Password Reset",
+          `Hello,\n\nYou requested to reset your password for Diamond Store Rice Inventory System.\n\nYour 6-digit reset code is: ${code}\n\nEnter this code in the app to create a new password.\n\n— Diamond Store System`
         );
         return { success: true, message: "Reset code sent to your email!" };
       } catch (e) {
-        return { success: false, message: "Email sent failed. Check email address." };
+        return { success: false, message: "Failed to send email. Check your email address." };
       }
     }
   }
   return { success: false, message: "Email not found in our records." };
 }
 
-// ========== RESET PASSWORD USING CODE ==========
+// ==========================================
+// FEATURE 1C: 🔑 RESET PASSWORD WITH CODE
+// ==========================================
 function resetPasswordWithCode(email, code, newPassword) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_USERS);
   const data = sheet.getDataRange().getValues();
@@ -111,23 +120,17 @@ function resetPasswordWithCode(email, code, newPassword) {
   
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === email && data[i][4] === code) {
-      const rowNum = i + 1;
-      sheet.getRange(rowNum, 2).setValue(newPassword);      // Update password
-      sheet.getRange(rowNum, 5).setValue("");                // Clear reset code
+      sheet.getRange(i + 1, 2).setValue(newPassword);
+      sheet.getRange(i + 1, 5).setValue("");
       return { success: true, message: "Password reset successful! Please login." };
     }
   }
   return { success: false, message: "Invalid or expired reset code." };
 }
 
-// ========== ADD USER (Admin only) ==========
-function addUser(email, password, role = "staff") {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_USERS);
-  sheet.appendRow([email.toLowerCase().trim(), password, role, new Date(), ""]);
-  return { success: true };
-}
-
-// ========== INVENTORY CRUD OPERATIONS ==========
+// ==========================================
+// FEATURE 3: 📦 INVENTORY MANAGEMENT
+// ==========================================
 function getInventory() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_INVENTORY);
   if (sheet.getLastRow() < 2) return [];
@@ -136,21 +139,9 @@ function getInventory() {
 
 function addInventory(item) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_INVENTORY);
-  const id = "ITEM-" + new Date().getTime();
+  const id = "RICE-" + new Date().getTime();
   sheet.appendRow([id, item.name, item.category, Number(item.qty), Number(item.price), Number(item.reorder)]);
   return { success: true, id: id };
-}
-
-function updateInventory(id, item) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_INVENTORY);
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === id) {
-      sheet.getRange(i + 1, 2, 1, 5).setValues([[item.name, item.category, Number(item.qty), Number(item.price), Number(item.reorder)]]);
-      return { success: true };
-    }
-  }
-  return { success: false };
 }
 
 function deleteInventory(id) {
@@ -165,50 +156,59 @@ function deleteInventory(id) {
   return { success: false };
 }
 
-// ========== STOCK-IN (PURCHASE) ==========
-function stockIn(riceId, qty, supplier, user) {
+// ==========================================
+// FEATURE 4: 📥 STOCK-IN / PURCHASES
+// ==========================================
+function stockIn(riceId, qtyKG, supplier, userEmail) {
   const invSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_INVENTORY);
   const inSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_STOCKIN);
-  const qtyNum = Number(qty);
   const data = invSheet.getDataRange().getValues();
+  const qty = Number(qtyKG);
   
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === riceId) {
-      const newQty = Number(data[i][3]) + qtyNum;
+      const newQty = Number(data[i][3]) + qty;
       invSheet.getRange(i + 1, 4).setValue(newQty);
       const refNo = "IN-" + new Date().getTime();
-      inSheet.appendRow([new Date(), refNo, riceId, data[i][1], qtyNum, supplier, user]);
+      inSheet.appendRow([new Date(), refNo, riceId, data[i][1], qty, supplier, userEmail]);
       return { success: true, refNo: refNo, newQty: newQty };
     }
   }
-  return { success: false, message: "Item not found" };
+  return { success: false, message: "Rice variety not found." };
 }
 
-// ========== STOCK-OUT (SALE) ==========
-function stockOut(riceId, qty, priceOverride, user) {
+// ==========================================
+// FEATURE 5: 📤 STOCK-OUT / SALES
+// ==========================================
+function stockOut(riceId, qtyKG, priceOverride, userEmail) {
   const invSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_INVENTORY);
   const outSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_STOCKOUT);
-  const qtyNum = Number(qty);
   const data = invSheet.getDataRange().getValues();
+  const qty = Number(qtyKG);
   
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === riceId) {
       const currentQty = Number(data[i][3]);
-      const unitPrice = priceOverride ? Number(priceOverride) : Number(data[i][4]);
-      if (currentQty < qtyNum) return { success: false, message: "Insufficient stock" };
+      const pricePerKG = priceOverride ? Number(priceOverride) : Number(data[i][4]);
       
-      const newQty = currentQty - qtyNum;
-      const total = qtyNum * unitPrice;
+      if (currentQty < qty) {
+        return { success: false, message: "Insufficient stock available!" };
+      }
+      
+      const newQty = currentQty - qty;
+      const totalAmount = qty * pricePerKG;
       invSheet.getRange(i + 1, 4).setValue(newQty);
       const refNo = "OUT-" + new Date().getTime();
-      outSheet.appendRow([new Date(), refNo, riceId, data[i][1], qtyNum, total, user]);
-      return { success: true, refNo: refNo, newQty: newQty, total: total };
+      outSheet.appendRow([new Date(), refNo, riceId, data[i][1], qty, totalAmount, userEmail]);
+      return { success: true, refNo: refNo, newQty: newQty, total: totalAmount };
     }
   }
-  return { success: false, message: "Item not found" };
+  return { success: false, message: "Rice variety not found." };
 }
 
-// ========== GET RECORDS FOR REPORTS ==========
+// ==========================================
+// FEATURE 6: 📈 REPORTS & HISTORY
+// ==========================================
 function getStockInRecords() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_STOCKIN);
   if (sheet.getLastRow() < 2) return [];
@@ -219,4 +219,13 @@ function getStockOutRecords() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_STOCKOUT);
   if (sheet.getLastRow() < 2) return [];
   return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues();
+}
+
+// ==========================================
+// FEATURE 7: ⚙️ SETTINGS — ADD USER
+// ==========================================
+function addUser(email, password, role = "staff") {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APP_CONFIG.SHEET_USERS);
+  sheet.appendRow([email.toLowerCase().trim(), password, role, new Date(), ""]);
+  return { success: true, message: "User added successfully!" };
 }
