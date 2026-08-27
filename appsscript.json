@@ -1,1 +1,13 @@
 
+{
+  "timeZone": "Asia/Manila",
+  "dependencies": {},
+  "webApp": {
+    "executeAs": "USER_CURRENT",
+    "access": "ANYONE"
+  },
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets"
+  ],
+  "runtimeVersion": "V8"
+}
