@@ -11,9 +11,1311 @@
 >
 
 <title>Diamond Store </title>
+<script>
+/* =========================================================
+   DIAMOND STORE
+   GITHUB FRONTEND → GOOGLE APPS SCRIPT BACKEND
+========================================================= */
+
 const APPS_SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbwOJcWUCwwnejKXDUU62wgebqGcqUgUfjdFCFKkY_9hYUuVjofb_yfVdzjVKaXF8h0OPg/exec";
-<script src="https://cdn.tailwindcss.com"></script>
+  "https://script.google.com/macros/s/AKfycbzyUniWHvgZaPx4yvnfzUSt3SLGaymR2kSPLTd4YcjP_5JV-tji-F-PHu_fcKHNOuuBGQ/exec";
+
+
+/* =========================================================
+   GLOBAL SESSION
+========================================================= */
+
+let currentUser = null;
+let currentRole = null;
+let sessionToken = null;
+
+
+/* =========================================================
+   API CONNECTOR
+========================================================= */
+
+async function api(action, data = {}) {
+
+    try {
+
+        const payload = {
+            action: action,
+            ...data
+        };
+
+        console.log("Sending to Apps Script:", payload);
+
+        const response = await fetch(APPS_SCRIPT_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+
+            body: JSON.stringify(payload)
+
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                "Server returned HTTP " + response.status
+            );
+        }
+
+        const result = await response.json();
+
+        console.log("Apps Script response:", result);
+
+        return result;
+
+    } catch (error) {
+
+        console.error("Apps Script connection error:", error);
+
+        throw new Error(
+            "Unable to connect to the server. Please check the Apps Script deployment."
+        );
+    }
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+async function loginUser() {
+
+    const username =
+        document.getElementById("username").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+    const loginButton =
+        document.getElementById("loginButton");
+
+    const loginMessage =
+        document.getElementById("loginMessage");
+
+
+    if (!username || !password) {
+
+        loginMessage.textContent =
+            "Please enter your username and password.";
+
+        return;
+    }
+
+
+    loginButton.disabled = true;
+
+    loginButton.textContent = "Logging in...";
+
+    loginMessage.textContent = "";
+
+
+    try {
+
+        const result = await api("login", {
+
+            username: username,
+            password: password
+
+        });
+
+
+        if (!result.success) {
+
+            loginMessage.textContent =
+                result.message || "Invalid username or password.";
+
+            loginButton.disabled = false;
+
+            loginButton.textContent = "Login";
+
+            return;
+        }
+
+
+        /* Save session */
+
+        currentUser = result.user;
+
+        currentRole = result.user.role;
+
+        sessionToken = result.token;
+
+
+        sessionStorage.setItem(
+            "diamond_session",
+            JSON.stringify({
+                token: sessionToken,
+                user: currentUser
+            })
+        );
+
+
+        /* Open system */
+
+        showApplication();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        loginMessage.textContent =
+            error.message;
+
+    }
+
+
+    loginButton.disabled = false;
+
+    loginButton.textContent = "Login";
+}
+
+
+/* =========================================================
+   CHECK SESSION
+========================================================= */
+
+async function checkSession() {
+
+    const saved =
+        sessionStorage.getItem("diamond_session");
+
+
+    if (!saved) {
+
+        showLogin();
+
+        return;
+    }
+
+
+    try {
+
+        const session =
+            JSON.parse(saved);
+
+
+        const result =
+            await api("checkSession", {
+
+                token: session.token
+
+            });
+
+
+        if (result.success) {
+
+            sessionToken =
+                session.token;
+
+            currentUser =
+                result.user;
+
+            currentRole =
+                result.user.role;
+
+
+            showApplication();
+
+        } else {
+
+            logoutUser();
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        showLogin();
+    }
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+async function logoutUser() {
+
+    try {
+
+        if (sessionToken) {
+
+            await api("logout", {
+                token: sessionToken
+            });
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+
+    currentUser = null;
+
+    currentRole = null;
+
+    sessionToken = null;
+
+
+    sessionStorage.removeItem(
+        "diamond_session"
+    );
+
+
+    showLogin();
+}
+
+
+/* =========================================================
+   LOGIN SCREEN
+========================================================= */
+
+function showLogin() {
+
+    const loginPage =
+        document.getElementById("loginPage");
+
+    const appPage =
+        document.getElementById("appPage");
+
+
+    if (loginPage)
+        loginPage.style.display = "flex";
+
+    if (appPage)
+        appPage.style.display = "none";
+}
+
+
+/* =========================================================
+   APPLICATION SCREEN
+========================================================= */
+
+function showApplication() {
+
+    const loginPage =
+        document.getElementById("loginPage");
+
+    const appPage =
+        document.getElementById("appPage");
+
+
+    if (loginPage)
+        loginPage.style.display = "none";
+
+    if (appPage)
+        appPage.style.display = "block";
+
+
+    applyRolePermissions();
+
+    loadDashboard();
+
+}
+
+
+/* =========================================================
+   ROLE BASED ACCESS CONTROL
+========================================================= */
+
+function applyRolePermissions() {
+
+    const adminOnly =
+        document.querySelectorAll(".admin-only");
+
+    const cashierAllowed =
+        [
+            "dashboard",
+            "stockout"
+        ];
+
+
+    adminOnly.forEach(element => {
+
+        if (currentRole === "Admin") {
+
+            element.style.display = "";
+
+        } else {
+
+            element.style.display = "none";
+
+        }
+
+    });
+
+
+    /* Cashier can only access Dashboard + Stock Out */
+
+    if (currentRole === "Cashier") {
+
+        document
+            .querySelectorAll("[data-module]")
+            .forEach(button => {
+
+                const module =
+                    button.dataset.module;
+
+                if (!cashierAllowed.includes(module)) {
+
+                    button.style.display = "none";
+
+                }
+
+            });
+
+    }
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function openModule(moduleName) {
+
+    if (
+        currentRole === "Cashier" &&
+        moduleName !== "dashboard" &&
+        moduleName !== "stockout"
+    ) {
+
+        alert(
+            "Access denied. Cashiers can only access Dashboard and Stock Out."
+        );
+
+        return;
+    }
+
+
+    document
+        .querySelectorAll(".module-panel")
+        .forEach(panel => {
+
+            panel.style.display = "none";
+
+        });
+
+
+    const selected =
+        document.getElementById(
+            moduleName + "Panel"
+        );
+
+
+    if (selected) {
+
+        selected.style.display = "block";
+
+    }
+
+
+    if (moduleName === "dashboard")
+        loadDashboard();
+
+    if (moduleName === "rice")
+        loadRice();
+
+    if (moduleName === "stockin")
+        loadStockIn();
+
+    if (moduleName === "stockout")
+        loadStockOut();
+
+    if (moduleName === "suppliers")
+        loadSuppliers();
+
+    if (moduleName === "spoilage")
+        loadSpoilage();
+
+    if (moduleName === "accounts")
+        loadAccounts();
+
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+async function loadDashboard() {
+
+    try {
+
+        const result =
+            await api("dashboard", {
+
+                token: sessionToken
+
+            });
+
+
+        if (!result.success)
+            return;
+
+
+        setText(
+            "totalSacks",
+            result.data.totalSacks || 0
+        );
+
+
+        setText(
+            "dailyRevenue",
+            "₱" +
+            Number(
+                result.data.dailyRevenue || 0
+            ).toLocaleString(
+                "en-PH",
+                {
+                    minimumFractionDigits: 2
+                }
+            )
+        );
+
+
+        setText(
+            "lowStockCount",
+            result.data.lowStockCount || 0
+        );
+
+
+        renderLowStock(
+            result.data.lowStock || []
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+/* =========================================================
+   RICE DIRECTORY
+========================================================= */
+
+async function loadRice() {
+
+    try {
+
+        const result =
+            await api("getRice", {
+
+                token: sessionToken
+
+            });
+
+
+        if (!result.success)
+            return;
+
+
+        const tbody =
+            document.getElementById(
+                "riceTableBody"
+            );
+
+
+        if (!tbody)
+            return;
+
+
+        tbody.innerHTML = "";
+
+
+        result.data.forEach(rice => {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${escapeHTML(rice.id)}</td>
+
+                <td>${escapeHTML(rice.name)}</td>
+
+                <td>${escapeHTML(rice.brand)}</td>
+
+                <td>${escapeHTML(rice.grade)}</td>
+
+                <td>${escapeHTML(rice.size)}</td>
+
+                <td>${Number(rice.stock).toLocaleString()}</td>
+
+                <td>
+                    ₱${Number(rice.price || 0).toFixed(2)}
+                </td>
+
+                <td>
+
+                    <button
+                        onclick="editRice('${escapeHTML(rice.id)}')"
+                        class="btn-edit">
+                        Edit
+                    </button>
+
+                    <button
+                        onclick="deleteRice('${escapeHTML(rice.id)}')"
+                        class="btn-delete">
+                        Delete
+                    </button>
+
+                </td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+/* =========================================================
+   ADD RICE
+========================================================= */
+
+async function addRice() {
+
+    const name =
+        document.getElementById("riceName").value.trim();
+
+    const brand =
+        document.getElementById("riceBrand").value.trim();
+
+    const grade =
+        document.getElementById("riceGrade").value.trim();
+
+    const size =
+        document.getElementById("riceSize").value;
+
+    const stock =
+        Number(
+            document.getElementById("riceStock").value
+        );
+
+    const price =
+        Number(
+            document.getElementById("ricePrice").value
+        );
+
+
+    if (!name || !brand || !grade || !size) {
+
+        alert("Please complete all rice information.");
+
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await api("addRice", {
+
+                token: sessionToken,
+
+                rice: {
+                    name,
+                    brand,
+                    grade,
+                    size,
+                    stock,
+                    price
+                }
+
+            });
+
+
+        alert(
+            result.message ||
+            "Rice added successfully."
+        );
+
+
+        loadRice();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+}
+
+
+/* =========================================================
+   DELETE RICE
+========================================================= */
+
+async function deleteRice(id) {
+
+    if (!confirm(
+        "Are you sure you want to delete this rice item?"
+    ))
+        return;
+
+
+    try {
+
+        const result =
+            await api("deleteRice", {
+
+                token: sessionToken,
+
+                id: id
+
+            });
+
+
+        alert(
+            result.message ||
+            "Rice deleted."
+        );
+
+
+        loadRice();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+}
+
+
+/* =========================================================
+   STOCK IN
+========================================================= */
+
+async function loadStockIn() {
+
+    try {
+
+        const result =
+            await api("getStockIn", {
+
+                token: sessionToken
+
+            });
+
+
+        if (!result.success)
+            return;
+
+
+        const tbody =
+            document.getElementById(
+                "stockInTableBody"
+            );
+
+
+        if (!tbody)
+            return;
+
+
+        tbody.innerHTML = "";
+
+
+        result.data.forEach(item => {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${escapeHTML(item.id)}</td>
+
+                <td>${escapeHTML(item.rice)}</td>
+
+                <td>${Number(item.sacks).toLocaleString()}</td>
+
+                <td>₱${Number(item.cost || 0).toFixed(2)}</td>
+
+                <td>${escapeHTML(item.supplier)}</td>
+
+                <td>${escapeHTML(item.date)}</td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+/* =========================================================
+   ADD STOCK IN
+========================================================= */
+
+async function addStockIn() {
+
+    const rice =
+        document.getElementById("stockInRice").value;
+
+    const sacks =
+        Number(
+            document.getElementById("stockInSacks").value
+        );
+
+    const cost =
+        Number(
+            document.getElementById("stockInCost").value
+        );
+
+    const supplier =
+        document.getElementById("stockInSupplier").value.trim();
+
+
+    if (!rice || sacks <= 0) {
+
+        alert("Enter valid stock information.");
+
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await api("addStockIn", {
+
+                token: sessionToken,
+
+                stockIn: {
+                    rice,
+                    sacks,
+                    cost,
+                    supplier
+                }
+
+            });
+
+
+        alert(
+            result.message ||
+            "Stock In recorded successfully."
+        );
+
+
+        loadStockIn();
+
+        loadDashboard();
+
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+}
+
+
+/* =========================================================
+   STOCK OUT / POS
+========================================================= */
+
+async function loadStockOut() {
+
+    try {
+
+        const result =
+            await api("getPOSItems", {
+
+                token: sessionToken
+
+            });
+
+
+        if (!result.success)
+            return;
+
+
+        const select =
+            document.getElementById(
+                "posRice"
+            );
+
+
+        if (!select)
+            return;
+
+
+        select.innerHTML =
+            '<option value="">Select rice</option>';
+
+
+        result.data.forEach(item => {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value =
+                item.id;
+
+            option.textContent =
+                `${item.name} - ${item.size} - ₱${item.price}`;
+
+
+            select.appendChild(option);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+/* =========================================================
+   PROCESS SALE
+========================================================= */
+
+async function processSale() {
+
+    const riceId =
+        document.getElementById(
+            "posRice"
+        ).value;
+
+
+    const quantity =
+        Number(
+            document.getElementById(
+                "posQuantity"
+            ).value
+        );
+
+
+    const unit =
+        document.getElementById(
+            "posUnit"
+        ).value;
+
+
+    if (!riceId || quantity <= 0) {
+
+        alert(
+            "Please select rice and enter a valid quantity."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await api("stockOut", {
+
+                token: sessionToken,
+
+                sale: {
+                    riceId,
+                    quantity,
+                    unit
+                }
+
+            });
+
+
+        if (!result.success) {
+
+            alert(
+                result.message ||
+                "Sale failed."
+            );
+
+            return;
+        }
+
+
+        alert(
+            result.message ||
+            "Sale completed successfully."
+        );
+
+
+        document.getElementById(
+            "posQuantity"
+        ).value = "";
+
+
+        loadDashboard();
+
+        loadStockOut();
+
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+}
+
+
+/* =========================================================
+   SUPPLIERS
+========================================================= */
+
+async function loadSuppliers() {
+
+    try {
+
+        const result =
+            await api("getSuppliers", {
+
+                token: sessionToken
+
+            });
+
+
+        if (!result.success)
+            return;
+
+
+        const tbody =
+            document.getElementById(
+                "supplierTableBody"
+            );
+
+
+        if (!tbody)
+            return;
+
+
+        tbody.innerHTML = "";
+
+
+        result.data.forEach(supplier => {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${escapeHTML(supplier.id)}</td>
+
+                <td>${escapeHTML(supplier.name)}</td>
+
+                <td>${escapeHTML(supplier.contact)}</td>
+
+                <td>${escapeHTML(supplier.phone)}</td>
+
+                <td>${escapeHTML(supplier.status)}</td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+/* =========================================================
+   SPOILAGE
+========================================================= */
+
+async function loadSpoilage() {
+
+    try {
+
+        const result =
+            await api("getSpoilage", {
+
+                token: sessionToken
+
+            });
+
+
+        if (!result.success)
+            return;
+
+
+        const tbody =
+            document.getElementById(
+                "spoilageTableBody"
+            );
+
+
+        if (!tbody)
+            return;
+
+
+        tbody.innerHTML = "";
+
+
+        result.data.forEach(item => {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${escapeHTML(item.id)}</td>
+
+                <td>${escapeHTML(item.rice)}</td>
+
+                <td>${Number(item.quantity)}</td>
+
+                <td>${escapeHTML(item.reason)}</td>
+
+                <td>${escapeHTML(item.date)}</td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+/* =========================================================
+   ACCOUNTS
+========================================================= */
+
+async function loadAccounts() {
+
+    if (currentRole !== "Admin") {
+
+        alert("Admin access required.");
+
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await api("getAccounts", {
+
+                token: sessionToken
+
+            });
+
+
+        if (!result.success)
+            return;
+
+
+        const tbody =
+            document.getElementById(
+                "accountTableBody"
+            );
+
+
+        if (!tbody)
+            return;
+
+
+        tbody.innerHTML = "";
+
+
+        result.data.forEach(account => {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${escapeHTML(account.id)}</td>
+
+                <td>${escapeHTML(account.username)}</td>
+
+                <td>${escapeHTML(account.name)}</td>
+
+                <td>${escapeHTML(account.role)}</td>
+
+                <td>${escapeHTML(account.status)}</td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+/* =========================================================
+   LOW STOCK
+========================================================= */
+
+function renderLowStock(items) {
+
+    const container =
+        document.getElementById(
+            "lowStockList"
+        );
+
+
+    if (!container)
+        return;
+
+
+    container.innerHTML = "";
+
+
+    if (items.length === 0) {
+
+        container.innerHTML =
+            "<p>No low-stock items.</p>";
+
+        return;
+    }
+
+
+    items.forEach(item => {
+
+        const div =
+            document.createElement("div");
+
+
+        div.className =
+            "low-stock-item";
+
+
+        div.innerHTML = `
+
+            <strong>
+                ${escapeHTML(item.name)}
+            </strong>
+
+            <span>
+                ${Number(item.stock)} sacks remaining
+            </span>
+
+        `;
+
+
+        container.appendChild(div);
+
+    });
+}
+
+
+/* =========================================================
+   HELPER
+========================================================= */
+
+function setText(id, value) {
+
+    const element =
+        document.getElementById(id);
+
+    if (element)
+        element.textContent = value;
+}
+
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+/* =========================================================
+   PASSWORD VISIBILITY
+========================================================= */
+
+function togglePassword() {
+
+    const password =
+        document.getElementById(
+            "password"
+        );
+
+
+    if (!password)
+        return;
+
+
+    password.type =
+        password.type === "password"
+            ? "text"
+            : "password";
+}
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        checkSession();
+
+    }
+);
+
+</script>
 
 <style>
 
