@@ -1,1 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌾 Rice Inventory System</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+    :root { --green: #2d5016; --light-green: #4caf50; --orange: #f57c00; --red: #c62828; --gray: #f5f5f5; }
+    body { background: #f8f9fa; min-height: 100vh; }
 
+    .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #2d5016, #558b2f); }
+    .login-card { background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+    .login-card h2 { text-align: center; color: #2d5016; margin-bottom: 1.5rem; }
+    .login-card input { width: 100%; padding: 0.9rem; margin: 0.5rem 0; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
+    .btn { padding: 0.85rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-primary { width: 100%; background: var(--green); color: white; margin-top: 0.5rem; }
+    .btn-primary:hover { background: #3e6b1f; }
+    .btn-success { background: var(--light-green); color: white; }
+    .btn-danger { background: var(--red); color: white; }
+    .btn-sm { padding: 0.4rem 0.7rem; font-size: 0.85rem; width: auto; margin: 0.1rem; }
+    .error { color: var(--red); margin-top: 0.8rem; text-align: center; }
+
+    .sidebar { position: fixed; top: 0; left: 0; width: 250px; height: 100vh; background: var(--green); color: white; padding-top: 1rem; transition: 0.3s; z-index: 99; overflow-y: auto; }
+    .sidebar h2 { text-align: center; padding: 1rem; font-size: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .sidebar a { display: block; color: white; padding: 14px 22px; text-decoration: none; font-size: 0.95rem; transition: 0.2s; border-left: 4px solid transparent; }
+    .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.15); border-left-color: #81c784; }
+    .main { margin-left: 250px; padding: 1.2rem; transition: 0.3s; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.9rem 1.2rem; border-radius: 10px; margin-bottom: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+    .hamburger { display: none; font-size: 1.6rem; cursor: pointer; color: var(--green); }
+    .user-info { font-size: 0.9rem; color: #555; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.2rem; }
+    .stat-card { background: white; padding: 1.2rem; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center; }
+    .stat-card h3 { font-size: 1.8rem; color: var(--green); margin-bottom: 0.3rem; }
+    .stat-card p { color: #666; font-size: 0.9rem; }
+    .panel { background: white; padding: 1.3rem; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); margin-bottom: 1.2rem; }
+    .panel h3 { color: var(--green); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eee; }
+
+    .form-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.8rem; }
+    input, select { padding: 0.7rem; border: 2px solid #e8e8e8; border-radius: 6px; font-size: 0.95rem; flex: 1; min-width: 120px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    th { background: #f8f8f8; color: var(--green); font-weight: 600; }
+    tr:hover { background: #fafafa; }
+    .low-stock { color: var(--orange); font-weight: 600; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 0; padding-top: 0; }
+      .sidebar.open { width: 250px; padding-top: 1rem; }
+      .main { margin-left: 0; }
+      .hamburger { display: block; }
+      .form-row { flex-direction: column; }
+      input, select { width: 100%; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="page-login" class="login-wrap">
+  <div class="login-card">
+    <h2>🌾 Rice Inventory System</h2>
+    <input type="email" id="login-email" placeholder="Email" required>
+    <input type="password" id="login-pass" placeholder="Password" required>
+    <button class="btn btn-primary" onclick="doLogin()">Login</button>
+    <p id="login-error" class="error"></p>
+    <p style="text-align:center; margin-top:1rem; font-size:0.85rem; color:#666;">
+      First time? Run: addUser("you@email.com", "password", "admin")
+    </p>
+  </div>
+</div>
+
+<div id="app-container" class="hidden">
+  <div class="sidebar" id="sidebar">
+    <h2>🌾 Rice Inventory</h2>
+    <a href="#" class="nav-link active" data-page="dashboard">📊 Dashboard</a>
+    <a href="#" class="nav-link" data-page="inventory">📦 Rice Inventory</a>
+    <a href="#" class="nav-link" data-page="stockin">📥 Stock-In Records</a>
+    <a href="#" class="nav-link" data-page="stockout">📤 Stock-Out / Sales</a>
+    <a href="#" class="nav-link" data-page="reports">📈 Reports & History</a>
+    <a href="#" class="nav-link" data-page="settings">⚙️ Settings</a>
+    <a href="#" onclick="doLogout()" style="margin-top:2rem;">🚪 Logout</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="hamburger" onclick="toggleSidebar()">☰</span>
+      <h4 id="page-title">Dashboard</h4>
+      <span class="user-info" id="user-display"></span>
+    </div>
+
+    <div id="dashboard" class="page-content">
+      <div class="grid">
+        <div class="stat-card"><h3 id="total-types">0</h3><p>Rice Varieties</p></div>
+        <div class="stat-card"><h3 id="total-qty">0</h3><p>Total Stock (kg)</p></div>
+        <div class="stat-card"><h3 id="low-count">0</h3><p>Low Stock Items</p></div>
+        <div class="stat-card"><h3 id="total-sales">₱0</h3><p>Total Sales</p></div>
+      </div>
+      <div class="panel">
+        <h3>📋 Inventory Overview</h3>
+        <table id="inv-table-dash"></table>
+      </div>
+    </div>
+
+    <div id="inventory" class="page-content hidden">
+      <div class="panel">
+        <h3>➕ Add New Rice Variety</h3>
+        <div class="form-row">
+          <input type="text" id="rice-name" placeholder="Rice Name / Variety">
+          <select id="rice-cat">
+            <option value="Premium">Premium</option>
+            <option value="Regular">Regular</option>
+            <option value="Special">Special</option>
+          </select>
+          <input type="number" id="rice-qty" placeholder="Initial Qty (kg)">
+          <input type="number" id="rice-price" placeholder="Unit Price (₱)">
+          <input type="number" id="rice-reorder" placeholder="Reorder Level">
+          <button class="btn btn-success" onclick="addRice()">Add Rice</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>📦 Rice Inventory List</h3>
+        <table id="inv-table">
+          <thead><tr><th>ID</th><th>Variety</th><th>Category</th><th>Qty (kg)</th><th>Price</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="stockin" class="page-content hidden">
+      <div class="panel">
+        <h3>📥 Record Stock-In / Purchase</h3>
+        <div class="form-row">
+          <select id="si-rice"></select>
+          <input type="number" id="si-qty" placeholder="Quantity (kg)">
+          <input type="text" id="si-supplier" placeholder="Supplier Name">
+          <button class="btn btn-success" onclick="recordStockIn()">Record Stock-In</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>📋 Stock-In History</h3>
+        <table id="si-table">
+          <thead><tr><th>Date</th><th>Ref No.</th><th>Rice</th><th>Qty In</th><th>Supplier</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="stockout" class="page-content hidden">
+      <div class="panel">
+        <h3>📤 Record Stock-Out / Sale</h3>
+        <div class="form-row">
+          <select id="so-rice"></select>
+          <input type="number" id="so-qty" placeholder="Quantity Sold (kg)">
+          <input type="number" id="so-price" placeholder="Price (blank = default)">
+          <button class="btn btn-primary" onclick="recordStockOut()">Record Sale</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>💰 Sales History</h3>
+        <table id="so-table">
+          <thead><tr><th>Date</th><th>Ref No.</th><th>Rice</th><th>Qty Sold</th><th>Total</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="reports" class="page-content hidden">
+      <div class="panel">
+        <h3>📈 Stock Movement Report</h3>
+        <div class="form-row">
+          <button class="btn btn-sm btn-success" onclick="loadAllStockIn()">📥 Stock-In Report</button>
+          <button class="btn btn-sm btn-primary" onclick="loadAllStockOut()">📤 Sales Report</button>
+        </div>
+        <table id="rpt-table" style="margin-top:1rem;">
+          <thead id="rpt-head"></thead>
+          <tbody id="rpt-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="settings" class="page-content hidden">
+      <div class="panel">
+        <h3>⚙️ System Settings</h3>
+        <p><strong>Current User:</strong> <span id="set-user"></span></p>
+        <p><strong>Role:</strong> <span id="set-role"></span></p>
+        <hr style="margin:1rem 0; border:none; border-top:1px solid #eee;">
+        <h4>👤 Add New User (Admin)</h4>
+        <div class="form-row">
+          <input type="email" id="new-usr-email" placeholder="Email">
+          <input type="password" id="new-usr-pass" placeholder="Password">
+          <select id="new-usr-role">
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button class="btn btn-success" onclick="createUser()">Add User</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+let inventoryData = [];
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  google.script.run.withSuccessHandler(r => {
+    if (r.success) {
+      currentUser = r;
+      sessionStorage.setItem('user', JSON.stringify(r));
+      showApp();
+    } else {
+      document.getElementById('login-error').textContent = r.message;
+    }
+  }).validateUser(email, pass);
+}
+
+function checkSession() {
+  const saved = sessionStorage.getItem('user');
+  if (saved) { currentUser = JSON.parse(saved); showApp(); }
+}
+
+function showApp() {
+  document.getElementById('page-login').classList.add('hidden');
+  document.getElementById('app-container').classList.remove('hidden');
+  document.getElementById('user-display').textContent = currentUser.email;
+  document.getElementById('set-user').textContent = currentUser.email;
+  document.getElementById('set-role').textContent = currentUser.role;
+  setupNavigation();
+  loadDashboard();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('user');
+  location.reload();
+}
+
+function setupNavigation() {
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.onclick = e => {
+      e.preventDefault();
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      const page = link.dataset.page;
+      document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+      document.getElementById(page).classList.remove('hidden');
+      document.getElementById('page-title').textContent = link.textContent.trim();
+      document.getElementById('sidebar').classList.remove('open');
+      if (page === 'inventory') loadInventory();
+      if (page === 'stockin') loadStockInPage();
+      if (page === 'stockout') loadStockOutPage();
+    };
+  });
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+async function loadDashboard() {
+  inventoryData = await google.script.run.withSuccessHandler(d => d).getInventory();
+  document.getElementById('total-types').textContent = inventoryData.length;
+  let totalQty = 0, lowCount = 0;
+  inventoryData.forEach(row => {
+    totalQty += Number(row[3]);
+    if (Number(row[3]) <= Number(row[5])) lowCount++;
+  });
+  document.getElementById('total-qty').textContent = totalQty;
+  document.getElementById('low-count').textContent = lowCount;
+
+  const sales = await google.script.run.withSuccessHandler(d => d).getStockOutRecords();
+  let totalSales = sales.reduce((sum, r) => sum + Number(r[5]), 0);
+  document.getElementById('total-sales').textContent = '₱' + totalSales.toLocaleString();
+
+  const tbody = document.querySelector('#inv-table-dash') || document.createElement('tbody');
+  tbody.innerHTML = '';
+  inventoryData.forEach(row => {
+    const status = Number(row[3]) <= Number(row[5]) ? '⚠️ Low Stock' : '✅ Good';
+    tbody.innerHTML += `<tr><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]} kg</td><td>₱${row[4]}</td><td>${status}</td></tr>`;
+  });
+}
+
+async function loadInventory() {
+  inventoryData = await google.script.run.withSuccessHandler(d => d).getInventory();
+  const tbody = document.querySelector('#inv-table tbody');
+  tbody.innerHTML = '';
+  inventoryData.forEach(row => {
+    const status = Number(row[3]) <= Number(row[5]) ? '<span class="low-stock">Low Stock</span>' : 'Good';
+    tbody.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>₱${row[4]}</td><td>${status}</td><td><button class="btn btn-sm btn-danger" onclick="delRice('${row[0]}')">Delete</button></td></tr>`;
+  });
+  updateDropdowns();
+}
+
+async function addRice() {
+  const item = {
+    name: document.getElementById('rice-name').value,
+    category: document.getElementById('rice-cat').value,
+    qty: document.getElementById('rice-qty').value,
+    price: document.getElementById('rice-price').value,
+    reorder: document.getElementById('rice-reorder').value || 10
+  };
+  await google.script.run.withSuccessHandler(() => { loadInventory(); }).addInventory(item);
+  document.getElementById('rice-name').value=''; document.getElementById('rice-qty').value='';
+}
+
+async function delRice(id) {
+  if (confirm('Delete this rice item?')) {
+    await google.script.run.withSuccessHandler(() => loadInventory()).deleteInventory(id);
+  }
+}
+
+function updateDropdowns() {
+  let si = document.getElementById('si-rice'), so = document.getElementById('so-rice');
+  si.innerHTML = so.innerHTML = '<option value="">-- Select Rice --</option>';
+  inventoryData.forEach(row => {
+    si.innerHTML += `<option value="${row[0]}">${row[1]} (${row[3]} kg)</option>`;
+    so.innerHTML += `<option value="${row[0]}">${row[1]} (${row[3]} kg)</option>`;
+  });
+}
+
+async function loadStockInPage() {
+  if (!inventoryData.length) await loadInventory();
+  const recs = await google.script.run.withSuccessHandler(d => d).getStockInRecords();
+  const tbody = document.querySelector('#si-table tbody');
+  tbody.innerHTML = '';
+  recs.reverse().forEach(row => {
+    tbody.innerHTML += `<tr><td>${new Date(row[0]).toLocaleDateString()}</td><td>${row[1]}</td><td>${row[3]}</td><td>${row[4]} kg</td><td>${row[5] || '-'}</td></tr>`;
+  });
+}
+
+async function recordStockIn() {
+  const riceId = document.getElementById('si-rice').value;
+  const qty = document.getElementById('si-qty').value;
+  const supplier = document.getElementById('si-supplier').value;
+  google.script.run.withSuccessHandler(r => {
+    if (r.success) { alert('✅ Stock-In Recorded! Ref: ' + r.refNo); loadStockInPage(); loadDashboard(); }
+    else alert('❌ ' + r.message);
+  }).stockIn(riceId, qty, supplier, currentUser.email);
+}
+
+async function loadStockOutPage() {
+  if (!inventoryData.length) await loadInventory();
+  const recs = await google.script.run.withSuccessHandler(d => d).getStockOutRecords();
+  const tbody = document.querySelector('#so-table tbody');
+  tbody.innerHTML = '';
+  recs.reverse().forEach(row => {
+    tbody.innerHTML += `<tr><td>${new Date(row[0]).toLocaleDateString()}</td><td>${row[1]}</td><td>${row[3]}</td><td>${row[4]} kg</td><td>₱${row[5]}</td></tr>`;
+  });
+}
+
+async function recordStockOut() {
+  const riceId = document.getElementById('so-rice').value;
+  const qty = document.getElementById('so-qty').value;
+  const price = document.getElementById('so-price').value || null;
+  google.script.run.withSuccessHandler(r => {
+    if (r.success) { alert('✅ Sale Recorded! Ref: ' + r.refNo + ' | Total: ₱' + r.total); loadStockOutPage(); loadDashboard(); }
+    else alert('❌ ' + r.message);
+  }).stockOut(riceId, qty, price, currentUser.email);
+}
+
+async function loadAllStockIn() {
+  document.getElementById('rpt-head').innerHTML = '<tr><th>Date</th><th>Ref No.</th><th>Rice</th><th>Qty In</th><th>Supplier</th><th>By</th></tr>';
+  const recs = await google.script.run.withSuccessHandler(d => d).getStockInRecords();
+  document.getElementById('rpt-body').innerHTML = recs.reverse().map(r =>
+    `<tr><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]||'-'}</td><td>${r[6]||'-'}</td></tr>`
+  ).join('');
+}
+
+async function loadAllStockOut() {
+  document.getElementById('rpt-head').innerHTML = '<tr><th>Date</th><th>Ref No.</th><th>Rice</th><th>Qty Sold</th><th>Total</th><th>By</th></tr>';
+  const recs = await google.script.run.withSuccessHandler(d => d).getStockOutRecords();
+  document.getElementById('rpt-body').innerHTML = recs.reverse().map(r =>
+    `<tr><td>${new Date(r[0]).toLocaleDateString()}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>₱${r[5]}</td><td>${r[6]||'-'}</td></tr>`
+  ).join('');
+}
+
+async function createUser() {
+  const email = document.getElementById('new-usr-email').value.trim();
+  const pass = document.getElementById('new-usr-pass').value;
+  const role = document.getElementById('new-usr-role').value;
+  await google.script.run.withSuccessHandler(() => alert('✅ User Created!')).addUser(email, pass, role);
+}
+
+window.onload = checkSession;
+</script>
+</body>
+</html>
