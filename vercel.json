@@ -1,1 +1,8 @@
-
+{
+  "version": 2,
+  "functions": {
+    "api/appscript.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}
