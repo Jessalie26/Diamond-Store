@@ -167,6 +167,36 @@ async function loginUser(
 
   return true;
 }
+async function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+
+    if (!username || !password) {
+        alert("Please enter username and password.");
+        return;
+    }
+
+    const success = await loginUser(
+        username,
+        password,
+        role
+    );
+
+    if (success) {
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("dashboardPage").classList.remove("hidden");
+
+        const userDisplay = document.getElementById("userDisplay");
+
+        if (userDisplay && currentUser) {
+            userDisplay.textContent =
+                currentUser.fullName + " (" + currentUser.role + ")";
+        }
+
+        await loadInventory();
+    }
+}
 
 
 // ============================================================
