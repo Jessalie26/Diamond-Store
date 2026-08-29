@@ -1,372 +1,693 @@
-<!doctype html>
-<html>
-  <head>
-    <base target="_top" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DIAMOND STORE - Rice Inventory System</title>
-    <style>
-      :root{
-        --bg:#0b1220; --card:#111b2e; --text:#e8eefc; --muted:#9db0d0;
-        --primary:#4f7cff; --danger:#ff4f6d; --ok:#2dd4bf; --border:#22314f;
-      }
-      body{
-        margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-        background:var(--bg); color:var(--text);
-      }
-      .app{max-width:1100px; margin:0 auto; padding:14px;}
-      .topbar{
-        display:flex; align-items:center; justify-content:space-between;
-        gap:10px; padding:10px 12px; margin-bottom:12px;
-        border:1px solid var(--border); background:rgba(17,27,46,.65);
-        border-radius:14px;
-      }
-      .brand{font-weight:800;}
-      .chip{padding:6px 10px; border:1px solid var(--border); border-radius:999px; color:var(--muted); font-size:13px;}
-      .btn{
-        border:none; cursor:pointer; padding:10px 12px; border-radius:12px;
-        color:var(--text); background:var(--primary);
-        font-weight:700;
-      }
-      .btn:active{transform:translateY(1px);}
-      .btn.secondary{background:transparent; border:1px solid var(--border);}
-      .btn.danger{background:var(--danger);}
-      .grid{
-        display:grid; grid-template-columns: 1fr; gap:12px;
-      }
-      @media(min-width:900px){
-        .layout{display:grid; grid-template-columns: 260px 1fr; gap:14px;}
-      }
+<!DOCTYPE html>
+<html lang="en">
 
-      /* Sidebar + mobile drawer */
-      .sidebar{
-        display:none;
-        border:1px solid var(--border); background:rgba(17,27,46,.65);
-        border-radius:14px; padding:10px;
-        height:fit-content;
-      }
-      @media(min-width:900px){
-        .sidebar{display:block;}
-      }
-      .navbtn{
-        width:100%; text-align:left; padding:10px 12px; border-radius:12px;
-        border:1px solid transparent; background:transparent; color:var(--text);
-        cursor:pointer; display:flex; justify-content:space-between; align-items:center;
-        margin-bottom:6px;
-      }
-      .navbtn:hover{background:rgba(79,124,255,.12); border-color:rgba(79,124,255,.25);}
-      .navbtn.active{background:rgba(79,124,255,.20); border-color:rgba(79,124,255,.35);}
-      .content{
-        border:1px solid var(--border); background:rgba(17,27,46,.65);
-        border-radius:14px; padding:12px;
-        min-height:420px;
-      }
+<head>
 
-      .row{display:flex; gap:10px; flex-wrap:wrap;}
-      .field{flex:1; min-width:180px;}
-      label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px;}
-      input, select, textarea{
-        width:100%; box-sizing:border-box;
-        padding:10px 12px; border-radius:12px;
-        border:1px solid var(--border); background:rgba(11,18,32,.2);
-        color:var(--text);
-        outline:none;
-      }
-      textarea{min-height:90px;}
-      table{width:100%; border-collapse:collapse; overflow:auto; display:block;}
-      th, td{padding:10px 8px; border-bottom:1px solid var(--border); text-align:left; font-size:13px;}
-      th{color:var(--muted); background:rgba(34,49,79,.35);}
-      .note{color:var(--muted); font-size:13px;}
-      .error{color:var(--danger); font-weight:700;}
-      .success{color:var(--ok); font-weight:700;}
+    <meta charset="UTF-8">
 
-      /* Mobile nav drawer */
-      .mobileNavBtn{display:block;}
-      @media(min-width:900px){ .mobileNavBtn{display:none;} }
-      .drawerOverlay{
-        position:fixed; inset:0; background:rgba(0,0,0,.55);
-        display:none; z-index:50;
-      }
-      .drawer{
-        position:fixed; top:0; right:0; bottom:0; width:85%;
-        background:var(--bg); border-left:1px solid var(--border);
-        transform:translateX(100%); transition:.2s ease;
-        z-index:60; padding:12px; overflow:auto;
-      }
-      .drawer.show{transform:translateX(0);}
-      .drawerOverlay.show{display:block;}
-      .drawer .sidebar{display:block; border:none; background:transparent; padding:0;}
-    </style>
-  </head>
-  <body>
-    <div class="app">
-      <div class="topbar">
-        <div class="brand">💎 DIAMOND STORE</div>
-        <div class="chip" id="sessionChip">Not logged in</div>
-        <button class="btn secondary mobileNavBtn" id="openDrawerBtn">☰ Menu</button>
-        <button class="btn danger" id="logoutBtn" style="display:none;">Logout</button>
-      </div>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-      <div class="layout">
-        <div class="sidebar" id="sidebar">
-          <button class="navbtn" data-view="dashboard" data-icon="📊">
-            <span>Dashboard</span><span>→</span>
-          </button>
-          <button class="navbtn" data-view="riceInventory" data-icon="🌾">
-            <span>Rice Inventory</span><span>→</span>
-          </button>
-          <button class="navbtn" data-view="stockManagement" data-icon="📦">
-            <span>Stock Management</span><span>→</span>
-          </button>
-          <button class="navbtn" data-view="posSales" data-icon="🧾">
-            <span>POS / Sales</span><span>→</span>
-          </button>
-          <button class="navbtn" data-view="suppliers" data-icon="🚚">
-            <span>Suppliers</span><span>→</span>
-          </button>
-          <button class="navbtn" data-view="spoilage" data-icon="⚠️">
-            <span>Spoilage</span><span>→</span>
-          </button>
-          <button class="navbtn" data-view="userReports" data-icon="👥">
-            <span>User & Reports</span><span>→</span>
-          </button>
+    <title>Diamond Store POS</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+<body>
+
+<div id="app">
+
+    <!-- ================================================= -->
+    <!-- LOGIN -->
+    <!-- ================================================= -->
+
+    <section id="loginPage" class="page">
+
+        <div class="login-container">
+
+            <h1>DIAMOND STORE</h1>
+
+            <h2>LOGIN ACCESS</h2>
+
+            <label>User ID / Username</label>
+
+            <input
+                id="username"
+                type="text"
+                placeholder="Enter username"
+            >
+
+            <label>Password</label>
+
+            <input
+                id="password"
+                type="password"
+                placeholder="Enter password"
+            >
+
+            <label>Select Role</label>
+
+            <select id="role">
+
+                <option value="Cashier">
+                    Cashier
+                </option>
+
+                <option value="Admin">
+                    Admin
+                </option>
+
+            </select>
+
+            <button onclick="login()">
+                LOGIN
+            </button>
+
+            <p id="loginMessage"></p>
+
         </div>
 
-        <div class="content" id="content">
-          <!-- login view inject -->
-        </div>
-      </div>
-    </div>
+    </section>
 
-    <!-- Mobile drawer -->
-    <div class="drawerOverlay" id="drawerOverlay"></div>
-    <div class="drawer" id="drawer">
-      <div class="sidebar">
-        <div class="note" style="margin-bottom:10px;">📱 Navigation</div>
-        <button class="navbtn" data-view="dashboard"><span>Dashboard</span><span>→</span></button>
-        <button class="navbtn" data-view="riceInventory"><span>Rice Inventory</span><span>→</span></button>
-        <button class="navbtn" data-view="stockManagement"><span>Stock Management</span><span>→</span></button>
-        <button class="navbtn" data-view="posSales"><span>POS / Sales</span><span>→</span></button>
-        <button class="navbtn" data-view="suppliers"><span>Suppliers</span><span>→</span></button>
-        <button class="navbtn" data-view="spoilage"><span>Spoilage</span><span>→</span></button>
-        <button class="navbtn" data-view="userReports"><span>User & Reports</span><span>→</span></button>
-      </div>
-    </div>
 
-    <script>
-      // Imong Google Apps Script Web App Deployment URL
-      const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby2SOSXnvEhnOtGWNfYeD6nskejBGrzPXUyEl4QNvqjyK7Q0xsLkYMdsPPDqWewImYOAQ/exec";
+    <!-- ================================================= -->
+    <!-- DASHBOARD -->
+    <!-- ================================================= -->
 
-      const session = {
-        token: localStorage.getItem('token'),
-        role: localStorage.getItem('role')
-      };
+    <section
+        id="dashboardPage"
+        class="page hidden"
+    >
 
-      const content = document.getElementById('content');
-      const chip = document.getElementById('sessionChip');
-      const logoutBtn = document.getElementById('logoutBtn');
+        <header>
 
-      function showDrawer(show){
-        document.getElementById('drawerOverlay').classList.toggle('show', show);
-        document.getElementById('drawer').classList.toggle('show', show);
-      }
-
-      document.getElementById('openDrawerBtn').onclick = () => showDrawer(true);
-      document.getElementById('drawerOverlay').onclick = () => showDrawer(false);
-
-      function setChip(){
-        if(session.token){
-          chip.textContent = `✅ Logged in (${session.role})`;
-          logoutBtn.style.display = 'inline-block';
-        }else{
-          chip.textContent = 'Not logged in';
-          logoutBtn.style.display = 'none';
-        }
-      }
-
-      logoutBtn.onclick = () => {
-        localStorage.clear();
-        session.token = null;
-        session.role = null;
-        setChip();
-        renderLogin();
-      };
-
-      function escapeHtml(s){
-        return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-      }
-
-      // HTTP Fetch call para sa Vercel to Apps Script Communication
-      async function callBackend(fnName, data){
-        try {
-          const response = await fetch(GAS_WEB_APP_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "text/plain;charset=utf-8" // text/plain prevents CORS preflight issues on Apps Script
-            },
-            body: JSON.stringify({
-              action: fnName,
-              params: data
-            })
-          });
-
-          const res = await response.json();
-          if (res.status === 'error') {
-            throw new Error(res.message);
-          }
-          return res.data;
-        } catch(err) {
-          throw new Error(err.message || "Network request failed");
-        }
-      }
-
-      function setActiveNav(view){
-        document.querySelectorAll('.navbtn').forEach(b => {
-          b.classList.toggle('active', b.dataset.view === view);
-        });
-      }
-
-      function navigate(view) {
-        showDrawer(false);
-        if(!session.token && view !== 'login') {
-          renderLogin();
-          return;
-        }
-        if(view === 'dashboard') renderDashboard();
-        else if(view === 'riceInventory') renderRiceInventory();
-        else renderLogin();
-      }
-
-      document.querySelectorAll('.navbtn').forEach(btn => {
-        btn.onclick = (e) => {
-          const view = e.currentTarget.dataset.view;
-          navigate(view);
-        };
-      });
-
-      function renderLogin(){
-        setActiveNav('');
-        content.innerHTML = `
-          <div class="grid">
-            <h2 style="margin:0 0 8px;">🔐 Login</h2>
-            <div class="note">Admin/Cashier login based on Users sheet.</div>
-            <div class="row" style="margin-top:12px;">
-              <div class="field">
-                <label>Email</label>
-                <input id="emailInput" type="email" placeholder="admin@diamond.com" />
-              </div>
-              <div class="field">
-                <label>Password</label>
-                <input id="passInput" type="password" placeholder="••••••••" />
-              </div>
-            </div>
-            <div class="row" style="margin-top:12px;">
-              <button class="btn" id="loginBtn" style="min-width:160px;">Login</button>
-              <div class="note" id="loginMsg" style="align-self:center;"></div>
-            </div>
-          </div>
-        `;
-
-        document.getElementById('loginBtn').onclick = async () => {
-          const email = document.getElementById('emailInput').value;
-          const password = document.getElementById('passInput').value;
-          const msg = document.getElementById('loginMsg');
-          msg.className = 'note';
-          msg.textContent = 'Logging in...';
-
-          try{
-            const res = await callBackend('login', { email, password });
-            session.token = res.token;
-            session.role = res.role;
-            localStorage.setItem('token', session.token);
-            localStorage.setItem('role', session.role);
-            setChip();
-            navigate('dashboard');
-          }catch(e){
-            msg.className = 'error';
-            msg.textContent = '❌ ' + (e && e.message ? e.message : e);
-          }
-        };
-      }
-
-      async function renderDashboard(){
-        setActiveNav('dashboard');
-        content.innerHTML = `<div class="note">Loading dashboard...</div>`;
-        try{
-          const data = await callBackend('dashboard', { token: session.token });
-          content.innerHTML = `
-            <div class="row" style="margin-bottom:10px;">
-              <div class="field"><div class="note">Total SKUs</div><div style="font-size:26px;font-weight:900;">${data.totalSkus}</div></div>
-              <div class="field"><div class="note">Total Stock</div><div style="font-size:26px;font-weight:900;">${data.totalStock}</div></div>
-              <div class="field"><div class="note">Low Stock Items</div><div style="font-size:26px;font-weight:900;">${data.lowStock.length}</div></div>
+            <div>
+                <h1>DIAMOND STORE</h1>
+                <span id="userDisplay"></span>
             </div>
 
-            <div class="row" style="margin-top:10px;">
-              <div class="field">
-                <div class="note">Sales (30 days)</div>
-                <div style="font-size:20px;font-weight:900;">${data.salesCount30Days} items</div>
-                <div class="note">Total: ₱${escapeHtml(data.salesTotal30Days)}</div>
-              </div>
-              <div class="field">
-                <div class="note">Low Stock Alert</div>
-                ${
-                  data.lowStock.length ? `
-                    <ul style="margin:8px 0 0; padding-left:18px;">
-                      ${data.lowStock.slice(0,5).map(x => `<li>${escapeHtml(x.name)}: ${x.stockQty} (<= ${x.threshold})</li>`).join('')}
-                    </ul>
-                  ` : `<div class="success">✅ No low stock</div>`
-                }
-              </div>
+            <button
+                class="logout"
+                onclick="logout()"
+            >
+                LOGOUT
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <h2>DASHBOARD</h2>
+
+
+            <div class="dashboard-grid">
+
+                <button onclick="showPage('posPage')">
+                    POS CHECKOUT
+                </button>
+
+                <button onclick="showStock()">
+                    STOCK TRACKER
+                </button>
+
+                <button
+                    id="shiftButton"
+                    onclick="showShift()"
+                >
+                    SHIFT SALES
+                </button>
+
+                <button
+                    id="supplierButton"
+                    onclick="showSupplier()"
+                >
+                    SUPPLIERS
+                </button>
+
+                <button
+                    id="spoilageButton"
+                    onclick="showSpoilage()"
+                >
+                    SPOILAGE
+                </button>
+
+                <button
+                    id="analyticsButton"
+                    onclick="showAnalytics()"
+                >
+                    SALES ANALYTICS
+                </button>
+
             </div>
-          `;
-        }catch(e){
-          content.innerHTML = `<div class="error">❌ ${escapeHtml(e.message || e)}</div>`;
-        }
-      }
 
-      async function renderRiceInventory(){
-        setActiveNav('riceInventory');
-        content.innerHTML = `<div class="note">Loading rice inventory...</div>`;
-        try{
-          const items = await callBackend('riceList', { token: session.token });
-          const canEdit = session.role === 'ADMIN';
 
-          content.innerHTML = `
-            <h3 style="margin:0 0 10px;">🌾 Rice Inventory</h3>
-            <div class="note">Inventory Table</div>
-            <div style="margin-top:8px; overflow:auto;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Product ID</th><th>Name</th><th>Unit Price</th><th>Stock</th><th>Low Threshold</th><th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${items.map(p => `
-                    <tr>
-                      <td>${escapeHtml(p.productId)}</td>
-                      <td>${escapeHtml(p.name)}</td>
-                      <td>₱${p.unitPrice}</td>
-                      <td>${p.stockQty}</td>
-                      <td>${p.lowStockThreshold}</td>
-                      <td>${escapeHtml(p.status)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <span>
+                        TODAY REVENUE
+                    </span>
+
+                    <strong id="dashRevenue">
+                        P0.00
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        TOTAL PROFIT
+                    </span>
+
+                    <strong id="dashProfit">
+                        P0.00
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        TOP SELLING
+                    </span>
+
+                    <strong id="dashTop">
+                        -
+                    </strong>
+
+                </div>
+
             </div>
-          `;
-        }catch(e){
-          content.innerHTML = `<div class="error">❌ ${escapeHtml(e.message || e)}</div>`;
-        }
-      }
 
-      // Initial page setup
-      setChip();
-      if(session.token) {
-        navigate('dashboard');
-      } else {
-        renderLogin();
-      }
-    </script>
-  </body>
+        </main>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- POS -->
+    <!-- ================================================= -->
+
+    <section
+        id="posPage"
+        class="page hidden"
+    >
+
+        <header>
+
+            <h1>DIAMOND STORE</h1>
+
+            <button onclick="showPage('dashboardPage')">
+                BACK
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <h2>POS CHECKOUT</h2>
+
+
+            <label>Rice Type</label>
+
+            <select id="posRice"></select>
+
+
+            <label>Quantity (kg)</label>
+
+            <input
+                id="posQuantity"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value="1"
+            >
+
+
+            <label>Price per kg</label>
+
+            <input
+                id="posPrice"
+                readonly
+            >
+
+
+            <button onclick="addToCart()">
+                ADD TO CART
+            </button>
+
+
+            <h3>CART SUMMARY</h3>
+
+            <div
+                id="cartList"
+                class="cart-list"
+            ></div>
+
+
+            <div class="total-box">
+
+                <label>
+                    Total Amount
+                </label>
+
+                <strong id="cartTotal">
+                    P0.00
+                </strong>
+
+            </div>
+
+
+            <label>
+                Cash Handed
+            </label>
+
+            <input
+                id="cashReceived"
+                type="number"
+                min="0"
+                step="0.01"
+                value="0"
+                oninput="calculateChange()"
+            >
+
+
+            <label>
+                Change
+            </label>
+
+            <input
+                id="changeAmount"
+                readonly
+            >
+
+
+            <button
+                class="primary"
+                onclick="completeSale()"
+            >
+                COMPLETE SALE
+            </button>
+
+            <p id="posMessage"></p>
+
+        </main>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- STOCK -->
+    <!-- ================================================= -->
+
+    <section
+        id="stockPage"
+        class="page hidden"
+    >
+
+        <header>
+
+            <h1>DIAMOND STORE</h1>
+
+            <button onclick="showPage('dashboardPage')">
+                BACK
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <h2>STOCK TRACKER</h2>
+
+            <div id="inventoryList"></div>
+
+
+            <div
+                id="adminStockEditor"
+                class="admin-only"
+            >
+
+                <h3>ADMIN EDIT INVENTORY</h3>
+
+                <label>Rice Type</label>
+
+                <select id="stockRice"></select>
+
+
+                <label>Sacks</label>
+
+                <input
+                    id="stockSacks"
+                    type="number"
+                    min="0"
+                >
+
+
+                <label>Loose Kg</label>
+
+                <input
+                    id="stockLoose"
+                    type="number"
+                    min="0"
+                >
+
+
+                <label>New Price per kg</label>
+
+                <input
+                    id="stockPrice"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                >
+
+
+                <button onclick="updateStock()">
+                    UPDATE STOCK
+                </button>
+
+                <p id="stockMessage"></p>
+
+            </div>
+
+        </main>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- SHIFT -->
+    <!-- ================================================= -->
+
+    <section
+        id="shiftPage"
+        class="page hidden"
+    >
+
+        <header>
+
+            <h1>DIAMOND STORE</h1>
+
+            <button onclick="showPage('dashboardPage')">
+                BACK
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <h2>SHIFT SALES SUMMARY</h2>
+
+
+            <label>Opening Cash</label>
+
+            <input
+                id="openingCash"
+                type="number"
+                value="0"
+            >
+
+
+            <button onclick="startShift()">
+                START SHIFT
+            </button>
+
+
+            <hr>
+
+
+            <label>Closing Cash</label>
+
+            <input
+                id="closingCash"
+                type="number"
+                value="0"
+            >
+
+
+            <button onclick="closeCurrentShift()">
+                CLOSE SHIFT
+            </button>
+
+
+            <div id="shiftInfo"></div>
+
+        </main>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- SUPPLIER -->
+    <!-- ================================================= -->
+
+    <section
+        id="supplierPage"
+        class="page hidden"
+    >
+
+        <header>
+
+            <h1>DIAMOND STORE</h1>
+
+            <button onclick="showPage('dashboardPage')">
+                BACK
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <h2>SUPPLIER & SHIPMENTS</h2>
+
+
+            <label>Supplier Name</label>
+
+            <input
+                id="supplierName"
+                placeholder="Golden Grain Trading"
+            >
+
+
+            <label>Contact Number</label>
+
+            <input
+                id="supplierContact"
+            >
+
+
+            <label>Address</label>
+
+            <input
+                id="supplierAddress"
+            >
+
+
+            <button onclick="saveSupplier()">
+                ADD SUPPLIER
+            </button>
+
+
+            <hr>
+
+
+            <label>Rice Type</label>
+
+            <select id="shipmentRice"></select>
+
+
+            <label>Sacks Received</label>
+
+            <input
+                id="shipmentSacks"
+                type="number"
+                min="1"
+            >
+
+
+            <label>Total Cost</label>
+
+            <input
+                id="shipmentCost"
+                type="number"
+                min="0"
+                step="0.01"
+            >
+
+
+            <button onclick="saveShipment()">
+                SAVE SHIPMENT
+            </button>
+
+
+            <p id="supplierMessage"></p>
+
+        </main>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- SPOILAGE -->
+    <!-- ================================================= -->
+
+    <section
+        id="spoilagePage"
+        class="page hidden"
+    >
+
+        <header>
+
+            <h1>DIAMOND STORE</h1>
+
+            <button onclick="showPage('dashboardPage')">
+                BACK
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <h2>SPOILAGE LOGGER</h2>
+
+
+            <label>Rice Type</label>
+
+            <select id="spoilageRice"></select>
+
+
+            <label>Damaged Weight (kg)</label>
+
+            <input
+                id="damagedKg"
+                type="number"
+                min="0.01"
+                step="0.01"
+            >
+
+
+            <label>Reason</label>
+
+            <input
+                id="spoilageReason"
+                placeholder="Wet Grain"
+            >
+
+
+            <button onclick="recordSpoilage()">
+                DEDUCT STOCK
+            </button>
+
+
+            <p id="spoilageMessage"></p>
+
+        </main>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- ANALYTICS -->
+    <!-- ================================================= -->
+
+    <section
+        id="analyticsPage"
+        class="page hidden"
+    >
+
+        <header>
+
+            <h1>DIAMOND STORE</h1>
+
+            <button onclick="showPage('dashboardPage')">
+                BACK
+            </button>
+
+        </header>
+
+
+        <main>
+
+            <h2>SALES ANALYTICS</h2>
+
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <span>
+                        TOTAL DAILY REVENUE
+                    </span>
+
+                    <strong id="analyticsRevenue">
+                        P0.00
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        TOTAL PROFIT
+                    </span>
+
+                    <strong id="analyticsProfit">
+                        P0.00
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        TOP SELLING RICE
+                    </span>
+
+                    <strong id="analyticsTop">
+                        -
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <h3>PRODUCT PERFORMANCE</h3>
+
+            <div id="productAnalytics"></div>
+
+
+            <button onclick="exportReport()">
+                EXPORT SALES REPORT
+            </button>
+
+        </main>
+
+    </section>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+
 </html>
