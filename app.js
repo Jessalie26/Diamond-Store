@@ -1,21 +1,35 @@
 // ============================================================
 // DIAMOND STORE POS & INVENTORY SYSTEM
-// FRONTEND - GITHUB / VERCEL
+// FULL FRONTEND JAVASCRIPT
+// GitHub + Vercel + Google Apps Script + Google Sheets
 // ============================================================
 
-// YOUR CURRENT GOOGLE APPS SCRIPT WEB APP
+
+// ============================================================
+// GOOGLE APPS SCRIPT WEB APP URL
+// ============================================================
+
 const API =
-"https://script.google.com/macros/s/AKfycbxt7gvro_J4zyqp-L5mXiF--TE90TpbVVrYRl5QtyNC6XlE2Mmp_Albo2nJqO0ssuXvAg/exec";
+    "https://script.google.com/macros/s/AKfycbxUxWm5chmH59VOdnDL4WJgSR0xEKGtkhu8gBZ9VCLxp0-Mj8xbNi1ztGFBy-aYtYw/exec";
+
+
+// ============================================================
+// GLOBAL VARIABLES
+// ============================================================
 
 let currentUser = null;
+
 let inventory = [];
+
 let cart = [];
+
 let suppliers = [];
+
 let currentShiftId = null;
 
 
 // ============================================================
-// API
+// API POST
 // ============================================================
 
 async function apiRequest(action, data = {}) {
@@ -23,6 +37,7 @@ async function apiRequest(action, data = {}) {
     try {
 
         const response = await fetch(API, {
+
             method: "POST",
 
             headers: {
@@ -33,199 +48,88 @@ async function apiRequest(action, data = {}) {
                 action: action,
                 ...data
             })
+
         });
 
-        return await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP error " + response.status
+            );
+        }
+
+
+        const result =
+            await response.json();
+
+
+        return result;
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "API ERROR:",
+            error
+        );
+
 
         return {
+
             success: false,
-            message: "Unable to connect to Google Sheets."
+
+            message:
+                "Unable to connect to Google Apps Script."
         };
     }
 }
 
+
+// ============================================================
+// API GET
+// ============================================================
 
 async function apiGet(action) {
 
     try {
 
-        const response = await fetch(
-            API + "?action=" + encodeURIComponent(action)
-        );
+        const response =
+            await fetch(
+                API +
+                "?action=" +
+                encodeURIComponent(action)
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP error " +
+                response.status
+            );
+        }
+
 
         return await response.json();
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "GET API ERROR:",
+            error
+        );
+
 
         return {
+
             success: false,
-            message: "Unable to connect to Google Sheets."
+
+            message:
+                "Unable to connect to Google Apps Script."
         };
     }
-}
-
-
-// ============================================================
-// MONEY
-// ============================================================
-
-function money(value) {
-
-    return "P" +
-        Number(value || 0).toLocaleString("en-PH", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-}
-
-
-// ============================================================
-// SESSION
-// ============================================================
-
-function isAdmin() {
-
-    return currentUser &&
-        String(currentUser.role).toLowerCase() === "admin";
-}
-
-
-function isCashier() {
-
-    return currentUser &&
-        String(currentUser.role).toLowerCase() === "cashier";
-}
-
-
-function restoreSession() {
-
-    const saved =
-        localStorage.getItem("diamondStoreUser");
-
-    if (!saved) {
-        return;
-    }
-
-    try {
-
-        currentUser = JSON.parse(saved);
-
-    } catch (error) {
-
-        localStorage.removeItem("diamondStoreUser");
-    }
-}
-
-
-function restoreShift() {
-
-    currentShiftId =
-        localStorage.getItem("diamondStoreShiftId");
-}
-
-
-// ============================================================
-// LOGIN
-// ============================================================
-
-async function loginUser(username, password, role) {
-
-    const result = await apiRequest("login", {
-        username: username,
-        password: password,
-        role: role
-    });
-
-    if (!result.success) {
-
-        alert(
-            result.message ||
-            "Invalid username, password or role."
-        );
-
-        return false;
-    }
-
-    currentUser = result.user;
-
-    localStorage.setItem(
-        "diamondStoreUser",
-        JSON.stringify(currentUser)
-    );
-
-    return true;
-}
-
-
-async function login() {
-
-    const username =
-        document.getElementById("username").value.trim();
-
-    const password =
-        document.getElementById("password").value;
-
-    const role =
-        document.getElementById("role").value;
-
-    if (!username || !password) {
-
-        alert("Please enter username and password.");
-
-        return;
-    }
-
-    const success =
-        await loginUser(
-            username,
-            password,
-            role
-        );
-
-    if (!success) {
-        return;
-    }
-
-    const userDisplay =
-        document.getElementById("userDisplay");
-
-    if (userDisplay) {
-
-        userDisplay.textContent =
-            currentUser.fullName +
-            " (" +
-            currentUser.role +
-            ")";
-    }
-
-    showPage("dashboardPage");
-
-    await loadInventory();
-    await loadDashboardAnalytics();
-}
-
-
-// ============================================================
-// LOGOUT
-// ============================================================
-
-function logout() {
-
-    currentUser = null;
-    inventory = [];
-    cart = [];
-    currentShiftId = null;
-
-    localStorage.removeItem("diamondStoreUser");
-    localStorage.removeItem("diamondStoreShiftId");
-
-    showPage("loginPage");
 }
 
 
@@ -237,7 +141,7 @@ function hideAllPages() {
 
     document
         .querySelectorAll(".page")
-        .forEach(page => {
+        .forEach(function(page) {
 
             page.classList.add("hidden");
 
@@ -249,8 +153,10 @@ function showPage(pageId) {
 
     hideAllPages();
 
+
     const page =
         document.getElementById(pageId);
+
 
     if (!page) {
 
@@ -262,304 +168,1088 @@ function showPage(pageId) {
         return;
     }
 
+
     page.classList.remove("hidden");
 
-    window.scrollTo(0, 0);
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 }
 
 
 // ============================================================
-// FEATURE 1 / 3
-// INVENTORY
+// ROLE HELPERS
+// ============================================================
+
+function isAdmin() {
+
+    return (
+        currentUser &&
+        String(currentUser.role)
+            .toLowerCase() === "admin"
+    );
+}
+
+
+function isCashier() {
+
+    return (
+        currentUser &&
+        String(currentUser.role)
+            .toLowerCase() === "cashier"
+    );
+}
+
+
+// ============================================================
+// MONEY FORMAT
+// ============================================================
+
+function money(value) {
+
+    return (
+        "P" +
+        Number(value || 0)
+            .toLocaleString(
+                "en-PH",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            )
+    );
+}
+
+
+// ============================================================
+// HTML SAFETY
+// ============================================================
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+// ============================================================
+// SESSION
+// ============================================================
+
+function restoreSession() {
+
+    const saved =
+        localStorage.getItem(
+            "diamondStoreUser"
+        );
+
+
+    if (!saved) {
+
+        currentUser = null;
+
+        return null;
+    }
+
+
+    try {
+
+        currentUser =
+            JSON.parse(saved);
+
+
+        return currentUser;
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        localStorage.removeItem(
+            "diamondStoreUser"
+        );
+
+        currentUser = null;
+
+        return null;
+    }
+}
+
+
+// ============================================================
+// SHIFT SESSION
+// ============================================================
+
+function restoreShift() {
+
+    currentShiftId =
+        localStorage.getItem(
+            "diamondStoreShiftId"
+        );
+
+
+    return currentShiftId;
+}
+
+
+// ============================================================
+// LOGIN
+// ============================================================
+
+async function loginUser(
+    username,
+    password,
+    role
+) {
+
+    const result =
+        await apiRequest(
+            "login",
+            {
+                username:
+                    username,
+
+                password:
+                    password,
+
+                role:
+                    role
+            }
+        );
+
+
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Invalid User ID/Username, password or role."
+        );
+
+        return false;
+    }
+
+
+    currentUser =
+        result.user;
+
+
+    localStorage.setItem(
+        "diamondStoreUser",
+        JSON.stringify(currentUser)
+    );
+
+
+    return true;
+}
+
+
+// ============================================================
+// LOGIN BUTTON
+// ============================================================
+
+async function login() {
+
+    const usernameInput =
+        document.getElementById(
+            "username"
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            "password"
+        );
+
+
+    const roleInput =
+        document.getElementById(
+            "role"
+        );
+
+
+    const message =
+        document.getElementById(
+            "loginMessage"
+        );
+
+
+    if (
+        !usernameInput ||
+        !passwordInput ||
+        !roleInput
+    ) {
+
+        console.error(
+            "Login fields not found."
+        );
+
+        return;
+    }
+
+
+    const username =
+        usernameInput.value.trim();
+
+
+    const password =
+        passwordInput.value;
+
+
+    const role =
+        roleInput.value;
+
+
+    if (!username) {
+
+        if (message) {
+
+            message.textContent =
+                "Please enter User ID or Username.";
+        }
+
+        return;
+    }
+
+
+    if (!password) {
+
+        if (message) {
+
+            message.textContent =
+                "Please enter your password.";
+        }
+
+        return;
+    }
+
+
+    if (message) {
+
+        message.textContent =
+            "Logging in...";
+    }
+
+
+    const success =
+        await loginUser(
+            username,
+            password,
+            role
+        );
+
+
+    if (!success) {
+
+        if (message) {
+
+            message.textContent =
+                "Login failed.";
+        }
+
+        return;
+    }
+
+
+    updateUserDisplay();
+
+
+    configureRoleAccess();
+
+
+    showPage(
+        "dashboardPage"
+    );
+
+
+    await loadInventory();
+
+    await loadDashboardAnalytics();
+
+
+    if (message) {
+
+        message.textContent =
+            "";
+    }
+}
+
+
+// ============================================================
+// USER DISPLAY
+// ============================================================
+
+function updateUserDisplay() {
+
+    const display =
+        document.getElementById(
+            "userDisplay"
+        );
+
+
+    if (
+        display &&
+        currentUser
+    ) {
+
+        display.textContent =
+            currentUser.fullName +
+            " (" +
+            currentUser.role +
+            ")";
+    }
+}
+
+
+// ============================================================
+// ROLE ACCESS
+// ============================================================
+
+function configureRoleAccess() {
+
+    const admin =
+        isAdmin();
+
+
+    const shiftButton =
+        document.getElementById(
+            "shiftButton"
+        );
+
+
+    const supplierButton =
+        document.getElementById(
+            "supplierButton"
+        );
+
+
+    const spoilageButton =
+        document.getElementById(
+            "spoilageButton"
+        );
+
+
+    const analyticsButton =
+        document.getElementById(
+            "analyticsButton"
+        );
+
+
+    const editor =
+        document.getElementById(
+            "adminStockEditor"
+        );
+
+
+    if (shiftButton) {
+
+        shiftButton.style.display =
+            admin ? "block" : "none";
+    }
+
+
+    if (supplierButton) {
+
+        supplierButton.style.display =
+            admin ? "block" : "none";
+    }
+
+
+    if (spoilageButton) {
+
+        spoilageButton.style.display =
+            admin ? "block" : "none";
+    }
+
+
+    if (analyticsButton) {
+
+        analyticsButton.style.display =
+            admin ? "block" : "none";
+    }
+
+
+    if (editor) {
+
+        editor.style.display =
+            admin ? "block" : "none";
+    }
+}
+
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
+function logout() {
+
+    currentUser = null;
+
+    inventory = [];
+
+    cart = [];
+
+    suppliers = [];
+
+    currentShiftId = null;
+
+
+    localStorage.removeItem(
+        "diamondStoreUser"
+    );
+
+
+    localStorage.removeItem(
+        "diamondStoreShiftId"
+    );
+
+
+    showPage(
+        "loginPage"
+    );
+
+
+    const username =
+        document.getElementById(
+            "username"
+        );
+
+
+    const password =
+        document.getElementById(
+            "password"
+        );
+
+
+    const message =
+        document.getElementById(
+            "loginMessage"
+        );
+
+
+    if (username) {
+        username.value = "";
+    }
+
+
+    if (password) {
+        password.value = "";
+    }
+
+
+    if (message) {
+        message.textContent = "";
+    }
+}
+
+
+// ============================================================
+// FEATURE 3
+// LOAD INVENTORY
 // ============================================================
 
 async function loadInventory() {
 
     const result =
-        await apiGet("inventory");
+        await apiGet(
+            "inventory"
+        );
 
-    if (!result.success) {
 
-        console.error(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        console.error(
+            result?.message ||
+            "Inventory loading failed."
+        );
 
         return [];
     }
 
+
     inventory =
-        result.inventory || [];
+        Array.isArray(
+            result.inventory
+        )
+            ? result.inventory
+            : [];
+
 
     renderInventory();
+
+
     populateRiceSelects();
+
 
     return inventory;
 }
 
 
-function findInventory(inventoryId) {
+// ============================================================
+// FIND INVENTORY ITEM
+// ============================================================
 
-    return inventory.find(item =>
-        String(item.inventoryId) ===
-        String(inventoryId)
+function findInventory(
+    inventoryId
+) {
+
+    return inventory.find(
+        function(item) {
+
+            return String(
+                item.inventoryId
+            ) === String(
+                inventoryId
+            );
+
+        }
     );
 }
 
 
+// ============================================================
+// GET AVAILABLE KG
+// ============================================================
+
+function getAvailableKg(item) {
+
+    if (!item) {
+        return 0;
+    }
+
+
+    if (
+        item.totalKg !== undefined
+    ) {
+
+        return Number(
+            item.totalKg
+        ) || 0;
+    }
+
+
+    const sacks =
+        Number(
+            item.quantitySacks ||
+            item.sacks ||
+            0
+        );
+
+
+    const loose =
+        Number(
+            item.looseKg ||
+            0
+        );
+
+
+    /*
+     * 1 sack = 50 kg
+     */
+
+    return (
+        sacks * 50 +
+        loose
+    );
+}
+
+
+// ============================================================
+// RENDER INVENTORY
+// ============================================================
+
 function renderInventory() {
 
     const container =
-        document.getElementById("inventoryList");
+        document.getElementById(
+            "inventoryList"
+        );
+
 
     if (!container) {
         return;
     }
 
-    if (inventory.length === 0) {
+
+    if (!inventory.length) {
 
         container.innerHTML =
-            "<p>No inventory data.</p>";
+            "<p>No inventory data available.</p>";
 
         return;
     }
 
+
     container.innerHTML =
-        inventory.map(item => {
+        inventory
+            .map(function(item) {
 
-            return `
-                <div class="summary-card">
+                const sacks =
+                    Number(
+                        item.quantitySacks ??
+                        item.sacks ??
+                        0
+                    );
 
-                    <strong>
-                        ${escapeHtml(item.riceType)}
-                    </strong>
 
-                    <p>
-                        Stock:
-                        ${Number(item.quantitySacks || 0)}
-                        Sacks |
-                        ${Number(item.looseKg || item.quantityKg || 0)}
-                        kg Loose
-                    </p>
+                const loose =
+                    Number(
+                        item.looseKg ??
+                        0
+                    );
 
-                    <p>
-                        Price:
-                        ${money(item.pricePerKg)} / kg
-                    </p>
 
-                </div>
-            `;
+                const price =
+                    Number(
+                        item.pricePerKg ??
+                        0
+                    );
 
-        }).join("");
+
+                const totalKg =
+                    getAvailableKg(item);
+
+
+                const lowStock =
+                    item.lowStock === true;
+
+
+                return `
+
+                    <div class="inventory-card
+                        ${lowStock ? "low-stock" : ""}">
+
+                        <h3>
+                            ${escapeHtml(
+                                item.riceType
+                            )}
+                        </h3>
+
+                        <div class="inventory-details">
+
+                            <div>
+                                <strong>
+                                    Sacks
+                                </strong>
+                                <br>
+                                ${sacks}
+                            </div>
+
+                            <div>
+                                <strong>
+                                    Loose
+                                </strong>
+                                <br>
+                                ${loose} kg
+                            </div>
+
+                            <div>
+                                <strong>
+                                    Total
+                                </strong>
+                                <br>
+                                ${totalKg} kg
+                            </div>
+
+                        </div>
+
+                        <p>
+                            Price:
+                            ${money(price)}
+                            / kg
+                        </p>
+
+                        <p>
+                            ${
+                                lowStock
+                                ? "LOW STOCK"
+                                : "Available"
+                            }
+                        </p>
+
+                    </div>
+                `;
+
+            })
+            .join("");
 }
 
 
+// ============================================================
+// POPULATE RICE SELECTS
+// ============================================================
+
 function populateRiceSelects() {
 
-    const selects = [
+    const ids = [
+
         "posRice",
+
         "stockRice",
+
         "shipmentRice",
+
         "spoilageRice"
+
     ];
 
-    selects.forEach(id => {
+
+    ids.forEach(function(id) {
 
         const select =
-            document.getElementById(id);
+            document.getElementById(
+                id
+            );
+
 
         if (!select) {
             return;
         }
 
-        select.innerHTML = "";
 
-        inventory.forEach(item => {
+        const previousValue =
+            select.value;
 
-            const option =
-                document.createElement("option");
 
-            option.value =
-                item.inventoryId;
+        select.innerHTML =
+            '<option value="">Select rice</option>';
 
-            option.textContent =
-                item.riceType;
 
-            select.appendChild(option);
-        });
+        inventory.forEach(
+            function(item) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    item.inventoryId;
+
+
+                option.textContent =
+                    item.riceType;
+
+
+                select.appendChild(
+                    option
+                );
+            }
+        );
+
+
+        if (
+            previousValue &&
+            findInventory(previousValue)
+        ) {
+
+            select.value =
+                previousValue;
+        }
+
     });
 
+
     updatePOSPrice();
+
+    updateStockEditorFields();
 }
 
+
+// ============================================================
+// POS PRICE
+// ============================================================
 
 function updatePOSPrice() {
 
     const select =
-        document.getElementById("posRice");
+        document.getElementById(
+            "posRice"
+        );
 
-    const price =
-        document.getElementById("posPrice");
 
-    if (!select || !price) {
+    const priceField =
+        document.getElementById(
+            "posPrice"
+        );
+
+
+    if (
+        !select ||
+        !priceField
+    ) {
         return;
     }
 
-    const item =
-        findInventory(select.value);
-
-    price.value =
-        item ? money(item.pricePerKg) : "";
-}
-
-
-// ============================================================
-// STOCK PAGE
-// ============================================================
-
-async function showStock() {
-
-    showPage("stockPage");
-
-    await loadInventory();
-
-    const editor =
-        document.getElementById("adminStockEditor");
-
-    if (editor) {
-
-        editor.style.display =
-            isAdmin() ? "block" : "none";
-    }
-}
-
-
-// ============================================================
-// UPDATE STOCK
-// ============================================================
-
-async function updateStock() {
-
-    if (!isAdmin()) {
-
-        alert("Only Admin can update stock.");
-
-        return;
-    }
-
-    const inventoryId =
-        document.getElementById("stockRice").value;
 
     const item =
-        findInventory(inventoryId);
+        findInventory(
+            select.value
+        );
+
 
     if (!item) {
 
-        alert("Please select rice type.");
+        priceField.value =
+            "";
 
         return;
     }
 
-    const sacks =
-        Number(
-            document.getElementById("stockSacks").value
+
+    priceField.value =
+        money(
+            item.pricePerKg
         );
-
-    const looseKg =
-        Number(
-            document.getElementById("stockLoose").value
-        );
-
-    const price =
-        Number(
-            document.getElementById("stockPrice").value
-        );
-
-    const result =
-        await apiRequest(
-            "updateInventory",
-            {
-                inventoryId: inventoryId,
-                riceType: item.riceType,
-                quantitySacks: sacks,
-                looseKg: looseKg,
-                pricePerKg: price,
-                role: currentUser.role,
-                userId: currentUser.userId,
-                userName: currentUser.fullName
-            }
-        );
-
-    if (!result.success) {
-
-        alert(result.message);
-
-        return;
-    }
-
-    alert("Inventory updated successfully.");
-
-    await loadInventory();
 }
 
 
 // ============================================================
-// POS
+// STOCK EDITOR FIELDS
+// ============================================================
+
+function updateStockEditorFields() {
+
+    const select =
+        document.getElementById(
+            "stockRice"
+        );
+
+
+    if (
+        !select ||
+        !select.value
+    ) {
+        return;
+    }
+
+
+    const item =
+        findInventory(
+            select.value
+        );
+
+
+    if (!item) {
+        return;
+    }
+
+
+    const sacks =
+        document.getElementById(
+            "stockSacks"
+        );
+
+
+    const loose =
+        document.getElementById(
+            "stockLoose"
+        );
+
+
+    const price =
+        document.getElementById(
+            "stockPrice"
+        );
+
+
+    if (sacks) {
+
+        sacks.value =
+            Number(
+                item.quantitySacks ??
+                item.sacks ??
+                0
+            );
+    }
+
+
+    if (loose) {
+
+        loose.value =
+            Number(
+                item.looseKg ??
+                0
+            );
+    }
+
+
+    if (price) {
+
+        price.value =
+            Number(
+                item.pricePerKg ??
+                0
+            );
+    }
+}
+
+
+// ============================================================
+// SELECT CHANGE
+// ============================================================
+
+document.addEventListener(
+    "change",
+    function(event) {
+
+        if (
+            event.target.id ===
+            "posRice"
+        ) {
+
+            updatePOSPrice();
+        }
+
+
+        if (
+            event.target.id ===
+            "stockRice"
+        ) {
+
+            updateStockEditorFields();
+        }
+
+    }
+);
+
+
+// ============================================================
+// FEATURE 2
+// ADD TO CART
 // ============================================================
 
 function addToCart() {
 
+    const select =
+        document.getElementById(
+            "posRice"
+        );
+
+
+    const quantityInput =
+        document.getElementById(
+            "posQuantity"
+        );
+
+
+    if (
+        !select ||
+        !quantityInput
+    ) {
+        return;
+    }
+
+
     const inventoryId =
-        document.getElementById("posRice").value;
+        select.value;
+
 
     const quantity =
         Number(
-            document.getElementById("posQuantity").value
+            quantityInput.value
         );
 
+
     const item =
-        findInventory(inventoryId);
+        findInventory(
+            inventoryId
+        );
+
 
     if (!item) {
 
-        alert("Rice type not found.");
-
-        return;
-    }
-
-    if (!quantity || quantity <= 0) {
-
-        alert("Enter a valid quantity.");
-
-        return;
-    }
-
-    const available =
-        Number(
-            item.totalKg ||
-            item.quantityKg ||
-            item.looseKg ||
-            0
+        alert(
+            "Please select a rice type."
         );
 
-    if (available > 0 && quantity > available) {
+        return;
+    }
+
+
+    if (
+        isNaN(quantity) ||
+        quantity <= 0
+    ) {
 
         alert(
+            "Please enter a valid quantity."
+        );
+
+        return;
+    }
+
+
+    const available =
+        getAvailableKg(item);
+
+
+    const existing =
+        cart.find(
+            function(cartItem) {
+
+                return String(
+                    cartItem.inventoryId
+                ) === String(
+                    inventoryId
+                );
+
+            }
+        );
+
+
+    const existingQuantity =
+        existing
+            ? Number(
+                existing.quantityKg
+            )
+            : 0;
+
+
+    if (
+        available > 0 &&
+        (
+            existingQuantity +
+            quantity
+        ) > available
+    ) {
+
+        alert(
+
             item.riceType +
             " only has " +
             available +
             " kg available."
+
         );
 
         return;
     }
 
-    const existing =
-        cart.find(x =>
-            String(x.inventoryId) ===
-            String(inventoryId)
-        );
+
+    const price =
+        Number(
+            item.pricePerKg
+        ) || 0;
+
 
     if (existing) {
 
-        existing.quantityKg += quantity;
+        existing.quantityKg +=
+            quantity;
+
 
         existing.subtotal =
             existing.quantityKg *
@@ -579,86 +1269,173 @@ function addToCart() {
                 quantity,
 
             pricePerKg:
-                Number(item.pricePerKg),
+                price,
+
+            costPerKg:
+                Number(
+                    item.costPerKg
+                ) || 0,
 
             subtotal:
                 quantity *
-                Number(item.pricePerKg)
+                price
         });
     }
 
+
     renderCart();
+
+
+    quantityInput.value =
+        1;
 }
 
 
+// ============================================================
+// CART
+// ============================================================
+
 function renderCart() {
 
-    const list =
-        document.getElementById("cartList");
+    const container =
+        document.getElementById(
+            "cartList"
+        );
+
 
     const totalElement =
-        document.getElementById("cartTotal");
+        document.getElementById(
+            "cartTotal"
+        );
 
-    if (!list) {
+
+    if (!container) {
         return;
     }
 
-    if (cart.length === 0) {
 
-        list.innerHTML =
+    if (!cart.length) {
+
+        container.innerHTML =
             "<p>Cart is empty.</p>";
 
     } else {
 
-        list.innerHTML =
-            cart.map((item, index) => {
+        container.innerHTML =
+            cart.map(
+                function(item, index) {
 
-                return `
-                    <div class="summary-card">
+                    return `
 
-                        <strong>
-                            ${escapeHtml(item.riceType)}
-                        </strong>
+                        <div class="cart-item">
 
-                        <p>
-                            ${item.quantityKg}
-                            kg ×
-                            ${money(item.pricePerKg)}
-                        </p>
+                            <span>
 
-                        <strong>
-                            ${money(item.subtotal)}
-                        </strong>
+                                <strong>
+                                    ${escapeHtml(
+                                        item.riceType
+                                    )}
+                                </strong>
 
-                        <button
-                            onclick="removeFromCart(${index})"
-                        >
-                            REMOVE
-                        </button>
+                                <br>
 
-                    </div>
-                `;
+                                ${item.quantityKg}
+                                kg @
+                                ${money(
+                                    item.pricePerKg
+                                )}
+                                /kg
 
-            }).join("");
+                            </span>
+
+                            <span>
+
+                                ${money(
+                                    item.subtotal
+                                )}
+
+                                <button
+                                    type="button"
+                                    onclick="removeFromCart(${index})"
+                                >
+                                    REMOVE
+                                </button>
+
+                            </span>
+
+                        </div>
+
+                    `;
+                }
+            ).join("");
     }
+
 
     if (totalElement) {
 
         totalElement.textContent =
-            money(getCartTotal());
+            money(
+                getCartTotal()
+            );
     }
+
 
     calculateChange();
 }
 
 
+// ============================================================
+// REMOVE CART ITEM
+// ============================================================
+
 function removeFromCart(index) {
 
-    cart.splice(index, 1);
+    if (
+        index < 0 ||
+        index >= cart.length
+    ) {
+        return;
+    }
+
+
+    cart.splice(
+        index,
+        1
+    );
+
 
     renderCart();
 }
 
+
+// ============================================================
+// CART TOTAL
+// ============================================================
+
+function getCartTotal() {
+
+    return cart.reduce(
+
+        function(total, item) {
+
+            return (
+                total +
+                (
+                    Number(
+                        item.subtotal
+                    ) || 0
+                )
+            );
+        },
+
+        0
+    );
+}
+
+
+// ============================================================
+// CLEAR CART
+// ============================================================
 
 function clearCart() {
 
@@ -668,44 +1445,61 @@ function clearCart() {
 }
 
 
-function getCartTotal() {
-
-    return cart.reduce(
-        (total, item) =>
-            total + Number(item.subtotal || 0),
-        0
-    );
-}
-
-
 // ============================================================
 // CHANGE
 // ============================================================
 
 function calculateChange() {
 
-    const cash =
-        Number(
-            document.getElementById("cashReceived")?.value || 0
+    const cashInput =
+        document.getElementById(
+            "cashReceived"
         );
 
-    const change =
-        cash - getCartTotal();
 
-    const output =
-        document.getElementById("changeAmount");
+    const changeOutput =
+        document.getElementById(
+            "changeAmount"
+        );
 
-    if (output) {
 
-        output.value =
-            money(change > 0 ? change : 0);
+    if (
+        !cashInput ||
+        !changeOutput
+    ) {
+        return;
     }
 
-    return change;
+
+    const cash =
+        Number(
+            cashInput.value
+        ) || 0;
+
+
+    const total =
+        getCartTotal();
+
+
+    const change =
+        cash - total;
+
+
+    if (change < 0) {
+
+        changeOutput.value =
+            "Insufficient cash";
+
+    } else {
+
+        changeOutput.value =
+            money(change);
+    }
 }
 
 
 // ============================================================
+// FEATURE 2
 // COMPLETE SALE
 // ============================================================
 
@@ -713,38 +1507,70 @@ async function completeSale() {
 
     if (!currentUser) {
 
-        alert("Please login first.");
+        alert(
+            "Please login first."
+        );
 
         return;
     }
 
-    if (cart.length === 0) {
 
-        alert("Cart is empty.");
+    if (!cart.length) {
+
+        alert(
+            "Cart is empty."
+        );
 
         return;
     }
+
+
+    const cashInput =
+        document.getElementById(
+            "cashReceived"
+        );
+
 
     const cash =
         Number(
-            document.getElementById("cashReceived").value
+            cashInput?.value
         );
+
 
     const total =
         getCartTotal();
 
-    if (!cash || cash < total) {
 
-        alert("Insufficient cash.");
+    if (
+        isNaN(cash) ||
+        cash <= 0
+    ) {
+
+        alert(
+            "Please enter cash handed."
+        );
 
         return;
     }
+
+
+    if (cash < total) {
+
+        alert(
+            "Insufficient cash."
+        );
+
+        return;
+    }
+
 
     const result =
         await apiRequest(
             "createSale",
             {
+
                 cashier: {
+
                     userId:
                         currentUser.userId,
 
@@ -763,74 +1589,330 @@ async function completeSale() {
             }
         );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Sale could not be completed."
+        );
 
         return;
     }
 
+
+    const sale =
+        result.sale || {};
+
+
     alert(
+
         "SALE COMPLETED\n\n" +
+
         "Transaction: " +
-        result.sale.transactionNumber +
-        "\nTotal: " +
-        money(result.sale.totalAmount) +
+        (
+            sale.transactionNumber ||
+            "-"
+        ) +
+
+        "\n\nTotal: " +
+        money(
+            sale.totalAmount
+        ) +
+
         "\nCash: " +
-        money(result.sale.cashReceived) +
+        money(
+            sale.cashReceived
+        ) +
+
         "\nChange: " +
-        money(result.sale.changeAmount)
+        money(
+            sale.changeAmount
+        )
+
     );
+
 
     clearCart();
 
-    document.getElementById("cashReceived").value = 0;
-    document.getElementById("changeAmount").value = money(0);
+
+    if (cashInput) {
+
+        cashInput.value =
+            "0";
+    }
+
+
+    const change =
+        document.getElementById(
+            "changeAmount"
+        );
+
+
+    if (change) {
+
+        change.value =
+            money(0);
+    }
+
 
     await loadInventory();
+
     await loadDashboardAnalytics();
 }
 
 
 // ============================================================
+// OPEN POS
+// ============================================================
+
+function showPOS() {
+
+    showPage(
+        "posPage"
+    );
+
+
+    loadInventory();
+}
+
+
+// ============================================================
+// FEATURE 3
+// STOCK TRACKER
+// ============================================================
+
+async function showStock() {
+
+    showPage(
+        "stockPage"
+    );
+
+
+    await loadInventory();
+
+
+    const editor =
+        document.getElementById(
+            "adminStockEditor"
+        );
+
+
+    if (editor) {
+
+        editor.style.display =
+            isAdmin()
+                ? "block"
+                : "none";
+    }
+}
+
+
+// ============================================================
+// UPDATE STOCK
+// ============================================================
+
+async function updateStock() {
+
+    if (!isAdmin()) {
+
+        alert(
+            "Only Admin can update stock."
+        );
+
+        return;
+    }
+
+
+    const select =
+        document.getElementById(
+            "stockRice"
+        );
+
+
+    const item =
+        findInventory(
+            select?.value
+        );
+
+
+    if (!item) {
+
+        alert(
+            "Please select a rice type."
+        );
+
+        return;
+    }
+
+
+    const sacks =
+        Number(
+            document.getElementById(
+                "stockSacks"
+            )?.value
+        );
+
+
+    const looseKg =
+        Number(
+            document.getElementById(
+                "stockLoose"
+            )?.value
+        );
+
+
+    const pricePerKg =
+        Number(
+            document.getElementById(
+                "stockPrice"
+            )?.value
+        );
+
+
+    if (
+        isNaN(sacks) ||
+        sacks < 0 ||
+        isNaN(looseKg) ||
+        looseKg < 0 ||
+        isNaN(pricePerKg) ||
+        pricePerKg < 0
+    ) {
+
+        alert(
+            "Please enter valid stock information."
+        );
+
+        return;
+    }
+
+
+    const result =
+        await apiRequest(
+            "updateInventory",
+            {
+
+                inventoryId:
+                    item.inventoryId,
+
+                riceType:
+                    item.riceType,
+
+                quantitySacks:
+                    sacks,
+
+                looseKg:
+                    looseKg,
+
+                pricePerKg:
+                    pricePerKg,
+
+                role:
+                    currentUser.role,
+
+                userId:
+                    currentUser.userId,
+
+                userName:
+                    currentUser.fullName
+            }
+        );
+
+
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Stock update failed."
+        );
+
+        return;
+    }
+
+
+    alert(
+        "Inventory updated successfully."
+    );
+
+
+    await loadInventory();
+}
+
+
+// ============================================================
+// FEATURE 4
 // SHIFT SALES
 // ============================================================
 
 async function showShift() {
 
-    showPage("shiftPage");
-
     if (!isAdmin()) {
 
-        alert("Shift Sales is Admin only.");
-
-        showPage("dashboardPage");
+        alert(
+            "Shift Sales is Admin only."
+        );
 
         return;
     }
+
+
+    showPage(
+        "shiftPage"
+    );
+
 
     await loadShiftSummary();
 }
 
 
+// ============================================================
+// START SHIFT
+// ============================================================
+
 async function startShift() {
 
     if (!currentUser) {
 
-        alert("Please login first.");
+        alert(
+            "Please login first."
+        );
 
         return;
     }
 
+
     const openingCash =
         Number(
-            document.getElementById("openingCash").value
-        ) || 0;
+            document.getElementById(
+                "openingCash"
+            )?.value
+        );
+
+
+    if (
+        isNaN(openingCash) ||
+        openingCash < 0
+    ) {
+
+        alert(
+            "Please enter valid opening cash."
+        );
+
+        return;
+    }
+
 
     const result =
         await apiRequest(
             "startShift",
             {
+
                 cashierId:
                     currentUser.userId,
 
@@ -842,28 +1924,56 @@ async function startShift() {
             }
         );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Unable to start shift."
+        );
 
         return;
     }
 
+
     currentShiftId =
         result.shiftId;
+
 
     localStorage.setItem(
         "diamondStoreShiftId",
         currentShiftId
     );
 
-    alert("Shift started successfully.");
+
+    alert(
+        "Shift started successfully."
+    );
+
 
     await loadShiftSummary();
 }
 
 
+// ============================================================
+// LOAD SHIFT SUMMARY
+// ============================================================
+
 async function loadShiftSummary() {
+
+    const container =
+        document.getElementById(
+            "shiftInfo"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
 
     const result =
         await apiRequest(
@@ -874,99 +1984,194 @@ async function loadShiftSummary() {
             }
         );
 
-    const container =
-        document.getElementById("shiftInfo");
 
-    if (!container) {
-        return;
-    }
-
-    if (!result.success) {
+    if (
+        !result ||
+        !result.success
+    ) {
 
         container.innerHTML =
             "<p>" +
-            escapeHtml(result.message) +
+            escapeHtml(
+                result?.message ||
+                "Unable to load shift."
+            ) +
             "</p>";
 
         return;
     }
 
+
     const shift =
-        result.shift || null;
+        result.shift;
+
 
     const transactions =
-        result.transactions || [];
+        Array.isArray(
+            result.transactions
+        )
+            ? result.transactions
+            : [];
+
 
     if (!shift) {
 
         container.innerHTML =
-            "<p>No shift record found.</p>";
+            "<p>No active shift.</p>";
 
         return;
     }
+
+
+    const openingCash =
+        Number(
+            shift.OpeningCash ??
+            shift.openingCash ??
+            0
+        );
+
+
+    const totalSales =
+        Number(
+            shift.totalSales ??
+            shift.TotalSales ??
+            0
+        );
+
+
+    const status =
+        shift.Status ??
+        shift.status ??
+        "OPEN";
+
 
     container.innerHTML = `
 
         <div class="summary-card">
 
             <strong>
-                Cashier:
+                Cashier Name
             </strong>
 
-            ${escapeHtml(shift.cashierName || "")}
+            <p>
+                ${escapeHtml(
+                    shift.CashierName ??
+                    shift.cashierName ??
+                    ""
+                )}
+            </p>
+
+            <strong>
+                Cash Drawer Total
+            </strong>
 
             <p>
-                Opening Cash:
-                ${money(shift.openingCash)}
+                ${money(totalSales)}
             </p>
 
             <p>
-                Sales:
-                ${money(shift.totalSales)}
+                Opening Cash:
+                ${money(openingCash)}
             </p>
 
             <p>
                 Status:
-                ${escapeHtml(shift.status || "")}
+                ${escapeHtml(
+                    status
+                )}
             </p>
 
         </div>
 
-        <h3>SHIFT TRANSACTIONS</h3>
+        <h3>
+            SHIFT TRANSACTIONS
+        </h3>
 
-        ${
-            transactions.length
-            ? transactions.map(t => `
-                <div class="summary-card">
-                    ${escapeHtml(t.transactionNumber)}
-                    —
-                    ${money(t.totalAmount)}
-                </div>
-            `).join("")
-            : "<p>No transactions.</p>"
-        }
+        <div class="cart-list">
+
+            ${
+                transactions.length
+
+                ? transactions
+                    .map(
+                        function(transaction) {
+
+                            return `
+
+                                <div class="cart-item">
+
+                                    <span>
+                                        ${escapeHtml(
+                                            transaction.transactionNumber ||
+                                            transaction.TransactionNumber ||
+                                            ""
+                                        )}
+                                    </span>
+
+                                    <strong>
+                                        ${money(
+                                            transaction.totalAmount ||
+                                            transaction.TotalAmount ||
+                                            0
+                                        )}
+                                    </strong>
+
+                                </div>
+                            `;
+                        }
+                    )
+                    .join("")
+
+                : "<p>No transactions yet.</p>"
+            }
+
+        </div>
     `;
 }
 
+
+// ============================================================
+// CLOSE SHIFT
+// ============================================================
 
 async function closeCurrentShift() {
 
     if (!currentShiftId) {
 
-        alert("No active shift.");
+        alert(
+            "No active shift."
+        );
 
         return;
     }
 
+
     const closingCash =
         Number(
-            document.getElementById("closingCash").value
-        ) || 0;
+            document.getElementById(
+                "closingCash"
+            )?.value
+        );
+
+
+    if (
+        isNaN(closingCash) ||
+        closingCash < 0
+    ) {
+
+        alert(
+            "Please enter valid closing cash."
+        );
+
+        return;
+    }
+
 
     const result =
         await apiRequest(
             "closeShift",
             {
+
                 shiftId:
                     currentShiftId,
 
@@ -975,99 +2180,172 @@ async function closeCurrentShift() {
             }
         );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Unable to close shift."
+        );
 
         return;
     }
 
+
     alert(
+
         "SHIFT CLOSED\n\n" +
+
         "Total Sales: " +
-        money(result.totalSales)
+        money(
+            result.totalSales
+        ) +
+
+        "\nClosing Cash: " +
+        money(
+            result.closingCash
+        )
+
     );
 
-    currentShiftId = null;
+
+    currentShiftId =
+        null;
+
 
     localStorage.removeItem(
         "diamondStoreShiftId"
     );
+
 
     await loadShiftSummary();
 }
 
 
 // ============================================================
-// SUPPLIERS
+// FEATURE 5
+// SUPPLIER
 // ============================================================
 
 async function showSupplier() {
 
     if (!isAdmin()) {
 
-        alert("Suppliers is Admin only.");
+        alert(
+            "Suppliers is Admin only."
+        );
 
         return;
     }
 
-    showPage("supplierPage");
+
+    showPage(
+        "supplierPage"
+    );
+
 
     await loadSuppliers();
 }
 
 
+// ============================================================
+// LOAD SUPPLIERS
+// ============================================================
+
 async function loadSuppliers() {
 
     const result =
-        await apiGet("suppliers");
+        await apiGet(
+            "suppliers"
+        );
 
-    if (!result.success) {
 
-        console.error(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        console.error(
+            result?.message ||
+            "Unable to load suppliers."
+        );
 
         return [];
     }
 
+
     suppliers =
-        result.suppliers || [];
+        Array.isArray(
+            result.suppliers
+        )
+            ? result.suppliers
+            : [];
+
 
     return suppliers;
 }
 
 
+// ============================================================
+// ADD SUPPLIER
+// ============================================================
+
 async function saveSupplier() {
 
     if (!isAdmin()) {
 
-        alert("Only Admin can add suppliers.");
+        alert(
+            "Only Admin can add suppliers."
+        );
 
         return;
     }
 
+
     const name =
-        document.getElementById("supplierName").value.trim();
+        document.getElementById(
+            "supplierName"
+        )?.value.trim();
+
 
     const contact =
-        document.getElementById("supplierContact").value.trim();
+        document.getElementById(
+            "supplierContact"
+        )?.value.trim();
+
 
     const address =
-        document.getElementById("supplierAddress").value.trim();
+        document.getElementById(
+            "supplierAddress"
+        )?.value.trim();
+
 
     if (!name) {
 
-        alert("Enter supplier name.");
+        alert(
+            "Supplier name is required."
+        );
 
         return;
     }
+
 
     const result =
         await apiRequest(
             "addSupplier",
             {
-                supplierName: name,
-                contactNumber: contact,
-                address: address,
+
+                supplierName:
+                    name,
+
+                contactNumber:
+                    contact,
+
+                address:
+                    address,
 
                 role:
                     currentUser.role,
@@ -1080,74 +2358,191 @@ async function saveSupplier() {
             }
         );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Unable to add supplier."
+        );
 
         return;
     }
 
-    alert("Supplier added successfully.");
 
-    document.getElementById("supplierName").value = "";
-    document.getElementById("supplierContact").value = "";
-    document.getElementById("supplierAddress").value = "";
+    alert(
+        "Supplier added successfully."
+    );
+
+
+    const message =
+        document.getElementById(
+            "supplierMessage"
+        );
+
+
+    if (message) {
+
+        message.textContent =
+            "Supplier saved successfully.";
+    }
+
+
+    const nameField =
+        document.getElementById(
+            "supplierName"
+        );
+
+
+    const contactField =
+        document.getElementById(
+            "supplierContact"
+        );
+
+
+    const addressField =
+        document.getElementById(
+            "supplierAddress"
+        );
+
+
+    if (nameField) {
+        nameField.value = "";
+    }
+
+
+    if (contactField) {
+        contactField.value = "";
+    }
+
+
+    if (addressField) {
+        addressField.value = "";
+    }
+
 
     await loadSuppliers();
 }
 
 
+// ============================================================
+// SAVE SHIPMENT
+// ============================================================
+
 async function saveShipment() {
 
     if (!isAdmin()) {
 
-        alert("Only Admin can save shipments.");
+        alert(
+            "Only Admin can save shipments."
+        );
 
         return;
     }
 
-    const riceSelect =
-        document.getElementById("shipmentRice");
 
-    const item =
-        findInventory(riceSelect.value);
+    const supplierName =
+        document.getElementById(
+            "supplierName"
+        )?.value.trim();
+
+
+    const riceSelect =
+        document.getElementById(
+            "shipmentRice"
+        );
+
+
+    const riceItem =
+        findInventory(
+            riceSelect?.value
+        );
+
 
     const sacks =
         Number(
-            document.getElementById("shipmentSacks").value
+            document.getElementById(
+                "shipmentSacks"
+            )?.value
         );
 
-    const cost =
+
+    const totalCost =
         Number(
-            document.getElementById("shipmentCost").value
+            document.getElementById(
+                "shipmentCost"
+            )?.value
         );
 
-    if (!item || sacks <= 0) {
 
-        alert("Enter valid shipment information.");
+    if (!supplierName) {
+
+        alert(
+            "Enter supplier name."
+        );
 
         return;
     }
 
-    const supplierName =
-        document.getElementById("supplierName").value.trim();
+
+    if (!riceItem) {
+
+        alert(
+            "Select rice type."
+        );
+
+        return;
+    }
+
+
+    if (
+        isNaN(sacks) ||
+        sacks <= 0
+    ) {
+
+        alert(
+            "Enter valid sacks received."
+        );
+
+        return;
+    }
+
+
+    if (
+        isNaN(totalCost) ||
+        totalCost < 0
+    ) {
+
+        alert(
+            "Enter valid total cost."
+        );
+
+        return;
+    }
+
 
     const result =
         await apiRequest(
             "saveShipment",
             {
-                supplierId: "",
+
+                supplierId:
+                    "",
+
                 supplierName:
                     supplierName,
 
                 riceType:
-                    item.riceType,
+                    riceItem.riceType,
 
                 sacksReceived:
                     sacks,
 
                 totalCost:
-                    cost,
+                    totalCost,
 
                 role:
                     currentUser.role,
@@ -1160,25 +2555,67 @@ async function saveShipment() {
             }
         );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Unable to save shipment."
+        );
 
         return;
     }
+
 
     alert(
         "Shipment saved and inventory updated."
     );
 
-    document.getElementById("shipmentSacks").value = "";
-    document.getElementById("shipmentCost").value = "";
+
+    const sacksField =
+        document.getElementById(
+            "shipmentSacks"
+        );
+
+
+    const costField =
+        document.getElementById(
+            "shipmentCost"
+        );
+
+
+    if (sacksField) {
+        sacksField.value = "";
+    }
+
+
+    if (costField) {
+        costField.value = "";
+    }
+
+
+    const message =
+        document.getElementById(
+            "supplierMessage"
+        );
+
+
+    if (message) {
+
+        message.textContent =
+            "Shipment saved successfully.";
+    }
+
 
     await loadInventory();
 }
 
 
 // ============================================================
+// FEATURE 6
 // SPOILAGE
 // ============================================================
 
@@ -1186,53 +2623,128 @@ async function showSpoilage() {
 
     if (!isAdmin()) {
 
-        alert("Spoilage is Admin only.");
+        alert(
+            "Spoilage is Admin only."
+        );
 
         return;
     }
 
-    showPage("spoilagePage");
+
+    showPage(
+        "spoilagePage"
+    );
+
 
     await loadInventory();
 }
 
 
+// ============================================================
+// RECORD SPOILAGE
+// ============================================================
+
 async function recordSpoilage() {
 
     if (!isAdmin()) {
 
-        alert("Only Admin can record spoilage.");
+        alert(
+            "Only Admin can record spoilage."
+        );
 
         return;
     }
 
-    const inventoryId =
-        document.getElementById("spoilageRice").value;
+
+    const select =
+        document.getElementById(
+            "spoilageRice"
+        );
+
 
     const item =
-        findInventory(inventoryId);
+        findInventory(
+            select?.value
+        );
+
 
     const damagedKg =
         Number(
-            document.getElementById("damagedKg").value
+            document.getElementById(
+                "damagedKg"
+            )?.value
         );
 
+
     const reason =
-        document.getElementById("spoilageReason").value.trim();
+        document.getElementById(
+            "spoilageReason"
+        )?.value.trim();
 
-    if (!item || damagedKg <= 0 || !reason) {
 
-        alert("Complete all spoilage fields.");
+    if (!item) {
+
+        alert(
+            "Select rice type."
+        );
 
         return;
     }
+
+
+    if (
+        isNaN(damagedKg) ||
+        damagedKg <= 0
+    ) {
+
+        alert(
+            "Enter valid damaged weight."
+        );
+
+        return;
+    }
+
+
+    const available =
+        getAvailableKg(item);
+
+
+    if (
+        available > 0 &&
+        damagedKg > available
+    ) {
+
+        alert(
+
+            "Cannot deduct " +
+            damagedKg +
+            " kg. Available stock is " +
+            available +
+            " kg."
+
+        );
+
+        return;
+    }
+
+
+    if (!reason) {
+
+        alert(
+            "Please enter the reason."
+        );
+
+        return;
+    }
+
 
     const result =
         await apiRequest(
             "recordSpoilage",
             {
+
                 inventoryId:
-                    inventoryId,
+                    item.inventoryId,
 
                 riceType:
                     item.riceType,
@@ -1254,27 +2766,77 @@ async function recordSpoilage() {
             }
         );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Unable to record spoilage."
+        );
 
         return;
     }
 
+
     alert(
-        "Spoilage recorded.\nEstimated Loss: " +
-        money(result.estimatedLoss)
+
+        "Spoilage recorded.\n\n" +
+
+        "Estimated Loss: " +
+
+        money(
+            result.estimatedLoss
+        )
+
     );
 
-    document.getElementById("damagedKg").value = "";
-    document.getElementById("spoilageReason").value = "";
+
+    const damagedField =
+        document.getElementById(
+            "damagedKg"
+        );
+
+
+    const reasonField =
+        document.getElementById(
+            "spoilageReason"
+        );
+
+
+    if (damagedField) {
+        damagedField.value = "";
+    }
+
+
+    if (reasonField) {
+        reasonField.value = "";
+    }
+
+
+    const message =
+        document.getElementById(
+            "spoilageMessage"
+        );
+
+
+    if (message) {
+
+        message.textContent =
+            "Spoilage recorded successfully.";
+    }
+
 
     await loadInventory();
+
     await loadDashboardAnalytics();
 }
 
 
 // ============================================================
+// FEATURE 7
 // ANALYTICS
 // ============================================================
 
@@ -1282,71 +2844,132 @@ async function showAnalytics() {
 
     if (!isAdmin()) {
 
-        alert("Sales Analytics is Admin only.");
+        alert(
+            "Sales Analytics is Admin only."
+        );
 
         return;
     }
 
-    showPage("analyticsPage");
+
+    showPage(
+        "analyticsPage"
+    );
+
 
     await loadAnalytics();
 }
 
 
+// ============================================================
+// LOAD ANALYTICS
+// ============================================================
+
 async function loadAnalytics() {
 
     const result =
-        await apiGet("analytics");
+        await apiGet(
+            "analytics"
+        );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        console.error(
+            result?.message ||
+            "Analytics loading failed."
+        );
 
         return null;
     }
 
-    const analytics =
-        result.analytics || {};
+
+    const data =
+        result.analytics ||
+        {};
+
 
     const revenue =
-        document.getElementById("analyticsRevenue");
+        document.getElementById(
+            "analyticsRevenue"
+        );
+
 
     const profit =
-        document.getElementById("analyticsProfit");
+        document.getElementById(
+            "analyticsProfit"
+        );
+
 
     const top =
-        document.getElementById("analyticsTop");
+        document.getElementById(
+            "analyticsTop"
+        );
 
-    if (revenue)
+
+    if (revenue) {
+
         revenue.textContent =
-            money(analytics.dailyRevenue);
+            money(
+                data.dailyRevenue
+            );
+    }
 
-    if (profit)
+
+    if (profit) {
+
         profit.textContent =
-            money(analytics.totalProfit);
+            money(
+                data.totalProfit
+            );
+    }
 
-    if (top)
+
+    if (top) {
+
         top.textContent =
-            analytics.topSelling || "-";
+            data.topSelling ||
+            "-";
+    }
+
 
     renderProductAnalytics(
-        analytics.products || []
+        data.products
     );
 
-    return analytics;
+
+    return data;
 }
 
 
-function renderProductAnalytics(products) {
+// ============================================================
+// PRODUCT ANALYTICS
+// ============================================================
+
+function renderProductAnalytics(
+    products
+) {
 
     const container =
-        document.getElementById("productAnalytics");
+        document.getElementById(
+            "productAnalytics"
+        );
+
 
     if (!container) {
         return;
     }
 
-    if (!products.length) {
+
+    if (
+        !products ||
+        typeof products !== "object" ||
+        Array.isArray(products) &&
+        products.length === 0
+    ) {
 
         container.innerHTML =
             "<p>No sales data yet.</p>";
@@ -1354,36 +2977,111 @@ function renderProductAnalytics(products) {
         return;
     }
 
+
+    let items = [];
+
+
+    if (Array.isArray(products)) {
+
+        items =
+            products;
+
+    } else {
+
+        items =
+            Object.keys(
+                products
+            ).map(
+                function(name) {
+
+                    const item =
+                        products[name];
+
+
+                    return {
+
+                        riceType:
+                            item.riceType ||
+                            name,
+
+                        quantityKg:
+                            Number(
+                                item.quantityKg ??
+                                item.quantity ??
+                                0
+                            ),
+
+                        revenue:
+                            Number(
+                                item.revenue ??
+                                item.sales ??
+                                0
+                            ),
+
+                        profit:
+                            Number(
+                                item.profit ??
+                                0
+                            )
+                    };
+                }
+            );
+    }
+
+
+    if (!items.length) {
+
+        container.innerHTML =
+            "<p>No sales data yet.</p>";
+
+        return;
+    }
+
+
     container.innerHTML =
-        products.map(item => {
+        items
+            .map(
+                function(item) {
 
-            return `
-                <div class="summary-card">
+                    return `
 
-                    <strong>
-                        ${escapeHtml(item.riceType)}
-                    </strong>
+                        <div class="summary-card">
 
-                    <p>
-                        Sold:
-                        ${Number(item.quantityKg || 0)}
-                        kg
-                    </p>
+                            <strong>
+                                ${escapeHtml(
+                                    item.riceType ||
+                                    "Unknown"
+                                )}
+                            </strong>
 
-                    <p>
-                        Revenue:
-                        ${money(item.revenue)}
-                    </p>
+                            <p>
+                                Quantity Sold:
+                                ${Number(
+                                    item.quantityKg ||
+                                    0
+                                )}
+                                kg
+                            </p>
 
-                    <p>
-                        Profit:
-                        ${money(item.profit)}
-                    </p>
+                            <p>
+                                Revenue:
+                                ${money(
+                                    item.revenue
+                                )}
+                            </p>
 
-                </div>
-            `;
+                            <p>
+                                Profit:
+                                ${money(
+                                    item.profit
+                                )}
+                            </p>
 
-        }).join("");
+                        </div>
+                    `;
+                }
+            )
+            .join("");
 }
 
 
@@ -1394,181 +3092,259 @@ function renderProductAnalytics(products) {
 async function loadDashboardAnalytics() {
 
     const result =
-        await apiGet("analytics");
+        await apiGet(
+            "analytics"
+        );
 
-    if (!result.success) {
+
+    if (
+        !result ||
+        !result.success
+    ) {
         return;
     }
 
-    const a =
-        result.analytics || {};
+
+    const data =
+        result.analytics ||
+        {};
+
 
     const revenue =
-        document.getElementById("dashRevenue");
+        document.getElementById(
+            "dashRevenue"
+        );
+
 
     const profit =
-        document.getElementById("dashProfit");
+        document.getElementById(
+            "dashProfit"
+        );
+
 
     const top =
-        document.getElementById("dashTop");
+        document.getElementById(
+            "dashTop"
+        );
 
-    if (revenue)
+
+    if (revenue) {
+
         revenue.textContent =
-            money(a.dailyRevenue);
+            money(
+                data.dailyRevenue
+            );
+    }
 
-    if (profit)
+
+    if (profit) {
+
         profit.textContent =
-            money(a.totalProfit);
+            money(
+                data.totalProfit
+            );
+    }
 
-    if (top)
+
+    if (top) {
+
         top.textContent =
-            a.topSelling || "-";
+            data.topSelling ||
+            "-";
+    }
 }
 
 
 // ============================================================
-// EXPORT
+// EXPORT SALES REPORT
 // ============================================================
 
 async function exportReport() {
 
     const result =
-        await apiGet("report");
+        await apiGet(
+            "report"
+        );
 
-    if (!result.success) {
 
-        alert(result.message);
+    if (
+        !result ||
+        !result.success
+    ) {
+
+        alert(
+            result?.message ||
+            "Unable to export report."
+        );
 
         return;
     }
 
+
     const rows =
-        result.rows || [];
+        Array.isArray(
+            result.rows
+        )
+            ? result.rows
+            : [];
+
 
     if (!rows.length) {
 
-        alert("No sales records to export.");
+        alert(
+            "No sales records available."
+        );
 
         return;
     }
 
+
     const headers =
-        Object.keys(rows[0]);
+        Object.keys(
+            rows[0]
+        );
+
 
     let csv =
-        headers.join(",") + "\n";
+        headers.join(",") +
+        "\n";
 
-    rows.forEach(row => {
 
-        csv +=
-            headers.map(h => {
+    rows.forEach(
+        function(row) {
 
-                return '"' +
-                    String(row[h] ?? "")
-                        .replace(/"/g, '""') +
-                    '"';
+            csv +=
 
-            }).join(",") +
-            "\n";
-    });
+                headers
+                    .map(
+                        function(header) {
+
+                            return (
+                                '"' +
+                                String(
+                                    row[header] ??
+                                    ""
+                                )
+                                    .replace(
+                                        /"/g,
+                                        '""'
+                                    ) +
+                                '"'
+                            );
+                        }
+                    )
+                    .join(",") +
+
+                "\n";
+        }
+    );
+
 
     const blob =
         new Blob(
             [csv],
-            { type: "text/csv;charset=utf-8;" }
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
         );
 
+
     const url =
-        URL.createObjectURL(blob);
+        URL.createObjectURL(
+            blob
+        );
+
 
     const link =
-        document.createElement("a");
+        document.createElement(
+            "a"
+        );
 
-    link.href = url;
+
+    link.href =
+        url;
+
 
     link.download =
         "Diamond-Store-Sales-Report.csv";
 
-    document.body.appendChild(link);
+
+    document.body.appendChild(
+        link
+    );
+
 
     link.click();
 
-    link.remove();
 
-    URL.revokeObjectURL(url);
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
 }
 
 
-// Keep compatibility with existing HTML
+// ============================================================
+// COMPATIBILITY
+// ============================================================
+
 function exportSalesReport() {
-    exportReport();
+
+    return exportReport();
 }
 
 
 // ============================================================
-// POS EVENTS
+// INITIALIZE
 // ============================================================
 
-document.addEventListener(
-    "change",
-    function(event) {
+async function initializeDiamondStore() {
 
-        if (event.target.id === "posRice") {
+    restoreSession();
 
-            updatePOSPrice();
-        }
+    restoreShift();
+
+
+    if (!currentUser) {
+
+        showPage(
+            "loginPage"
+        );
+
+        return;
     }
-);
 
 
-// ============================================================
-// SECURITY / DISPLAY HELPER
-// ============================================================
+    updateUserDisplay();
 
-function escapeHtml(value) {
+    configureRoleAccess();
 
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+
+    showPage(
+        "dashboardPage"
+    );
+
+
+    await loadInventory();
+
+    await loadDashboardAnalytics();
 }
 
 
 // ============================================================
-// INITIALIZATION
+// PAGE LOAD
 // ============================================================
 
 document.addEventListener(
     "DOMContentLoaded",
-    async function() {
+    function() {
 
-        restoreSession();
-        restoreShift();
+        initializeDiamondStore();
 
-        if (currentUser) {
-
-            const display =
-                document.getElementById("userDisplay");
-
-            if (display) {
-
-                display.textContent =
-                    currentUser.fullName +
-                    " (" +
-                    currentUser.role +
-                    ")";
-            }
-
-            showPage("dashboardPage");
-
-            await loadInventory();
-            await loadDashboardAnalytics();
-
-        } else {
-
-            showPage("loginPage");
-        }
     }
 );
