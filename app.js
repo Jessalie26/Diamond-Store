@@ -2,7 +2,7 @@
 // DIAMOND STORE FRONTEND
 // ============================================================
 
-const API = "/api/appscript";
+const API = "https://script.google.com/macros/s/AKfycbxUxWm5chmH59VOdnDL4WJgSR0xEKGtkhu8gBZ9VCLxp0-Mj8xbNi1ztGFBy-aYtYw/exec";
 
 let currentUser = null;
 
