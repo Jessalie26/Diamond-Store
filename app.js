@@ -5,7 +5,7 @@
 
 // YOUR CURRENT GOOGLE APPS SCRIPT WEB APP
 const API =
-"https://script.google.com/macros/s/AKfycbwpFhKXUYPCcY2QjQGb0RiHJwU9mzPmGvA_SRUZRG_LomapABO9dkjc4S8MvZb3-EJF/exec";
+"https://script.google.com/macros/s/AKfycbxt7gvro_J4zyqp-L5mXiF--TE90TpbVVrYRl5QtyNC6XlE2Mmp_Albo2nJqO0ssuXvAg/exec";
 
 let currentUser = null;
 let inventory = [];
