@@ -1051,8 +1051,42 @@
         </div>
 
         <div id="adminStockEditor">
-            <h3 class="section-title">Edit Inventory</h3>
 
+            <!-- ── ADD NEW RICE TYPE ─────────────────────── -->
+            <h3 class="section-title">Add New Rice Type</h3>
+            <div class="form-card">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div>
+                        <label for="newRiceName">Rice Type Name</label>
+                        <input id="newRiceName" type="text" placeholder="e.g. Sinandomeng Premium">
+                    </div>
+                    <div>
+                        <label for="newRiceSacks">Initial Sacks</label>
+                        <input id="newRiceSacks" type="number" min="0" value="0">
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:4px;">
+                    <div>
+                        <label for="newRiceLoose">Loose Kg</label>
+                        <input id="newRiceLoose" type="number" min="0" step="0.01" value="0">
+                    </div>
+                    <div>
+                        <label for="newRicePrice">Price / kg</label>
+                        <input id="newRicePrice" type="number" min="0" step="0.01" value="0">
+                    </div>
+                    <div>
+                        <label for="newRiceCost">Cost / kg</label>
+                        <input id="newRiceCost" type="number" min="0" step="0.01" value="0">
+                    </div>
+                </div>
+                <button type="button" class="btn-gold" style="margin-top:20px;" onclick="addNewRiceType()">
+                    + Add Rice Type
+                </button>
+                <p id="newRiceMessage" class="message"></p>
+            </div>
+
+            <!-- ── EDIT EXISTING INVENTORY ───────────────── -->
+            <h3 class="section-title">Edit Existing Inventory</h3>
             <div class="form-card">
                 <label for="stockRice">Rice Type</label>
                 <select id="stockRice" onchange="loadStockFields()"></select>
@@ -1077,6 +1111,7 @@
                 </button>
                 <p id="stockMessage" class="message"></p>
             </div>
+
         </div>
     </div>
 </section>
