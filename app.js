@@ -13,7 +13,7 @@
 // ============================================================
 
 var API =
-    "https://script.google.com/macros/s/AKfycbzpBzXUkj53EbrVvs4-KSmtvKfufLUiyv08JtR956uPCcSOGu6BwG5XfR3QHeHUlv2xtQ/exec";
+    "https://script.google.com/macros/s/AKfycbzva1stXquVGdYOUc7pw39ZPPuh2rJiCw1DjscFDSjDyEYyEmTXI9GmO7sJ2_eo3uESFQ/exec";
 
 
 // ============================================================
@@ -671,6 +671,70 @@ async function completeSale() {
 
     loadInventory().catch(function (e) { console.error(e); });
     loadDashboardAnalytics().catch(function (e) { console.error(e); });
+}
+
+
+// ============================================================
+// STOCK — ADD NEW RICE TYPE (Admin only)
+// ============================================================
+
+async function addNewRiceType() {
+    if (!isAdmin()) {
+        alert("Only Admin can add new rice types.");
+        return;
+    }
+
+    var nameEl  = document.getElementById("newRiceName");
+    var sacksEl = document.getElementById("newRiceSacks");
+    var looseEl = document.getElementById("newRiceLoose");
+    var priceEl = document.getElementById("newRicePrice");
+    var costEl  = document.getElementById("newRiceCost");
+
+    var riceType  = nameEl  ? nameEl.value.trim()  : "";
+    var sacks     = Number(sacksEl ? sacksEl.value : 0);
+    var looseKg   = Number(looseEl ? looseEl.value : 0);
+    var pricePerKg = Number(priceEl ? priceEl.value : 0);
+    var costPerKg  = Number(costEl  ? costEl.value  : 0);
+
+    if (!riceType) {
+        setMessage("newRiceMessage", "Rice type name is required.", true);
+        return;
+    }
+    if (sacks < 0 || looseKg < 0 || pricePerKg < 0 || costPerKg < 0) {
+        setMessage("newRiceMessage", "Values cannot be negative.", true);
+        return;
+    }
+
+    setMessage("newRiceMessage", "Adding rice type...");
+
+    var result = await apiPost("addInventory", {
+        riceType:      riceType,
+        quantitySacks: sacks,
+        looseKg:       looseKg,
+        pricePerKg:    pricePerKg,
+        pricePerSack:  pricePerKg * 50,
+        costPerKg:     costPerKg,
+        role:          currentUser.role,
+        userId:        currentUser.userId,
+        userName:      currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        setMessage("newRiceMessage", result.message || "Failed to add rice type.", true);
+        return;
+    }
+
+    setMessage("newRiceMessage", riceType + " added successfully.");
+
+    // Clear the form
+    if (nameEl)  { nameEl.value  = ""; }
+    if (sacksEl) { sacksEl.value = "0"; }
+    if (looseEl) { looseEl.value = "0"; }
+    if (priceEl) { priceEl.value = "0"; }
+    if (costEl)  { costEl.value  = "0"; }
+
+    // Reload inventory so the new type appears immediately
+    await loadInventory();
 }
 
 
