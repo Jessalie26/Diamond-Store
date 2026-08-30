@@ -367,27 +367,38 @@ function renderInventory() {
         return;
     }
 
-    container.innerHTML = inventory.map(function (item) {
+    var html = inventory.map(function (item) {
         var sacks    = Number(item.quantitySacks != null ? item.quantitySacks
                             : item.sacks || 0);
         var loose    = Number(item.looseKg || 0);
         var price    = Number(item.pricePerKg || 0);
         var totalKg  = getAvailableKg(item);
         var lowStock = item.lowStock === true || item.lowStock === "true";
+        var outStock = totalKg <= 0;
+
+        var badgeClass = outStock  ? "badge badge-out"
+                       : lowStock  ? "badge badge-low"
+                       : "badge badge-available";
+        var badgeLabel = outStock  ? "Out of Stock"
+                       : lowStock  ? "&#9888; Low Stock"
+                       : "&#10003; Available";
 
         return (
             '<div class="inventory-card' + (lowStock ? " low-stock" : "") + '">' +
             "<h3>" + escapeHtml(item.riceType) + "</h3>" +
             '<div class="inventory-details">' +
-            "<div><strong>Sacks</strong><br>" + sacks + "</div>" +
-            "<div><strong>Loose</strong><br>" + loose + " kg</div>" +
-            "<div><strong>Total</strong><br>" + totalKg + " kg</div>" +
+            "<div><strong>Sacks</strong>" + sacks + "</div>" +
+            "<div><strong>Loose</strong>" + loose + " kg</div>" +
+            "<div><strong>Total</strong>" + totalKg + " kg</div>" +
             "</div>" +
-            "<p>Price: " + money(price) + " / kg</p>" +
-            "<p>" + (lowStock ? "&#9888; LOW STOCK" : "Available") + "</p>" +
+            '<p class="price-line">Price: <strong>' + money(price) + '</strong> / kg</p>' +
+            '<span class="' + badgeClass + '">' + badgeLabel + "</span>" +
             "</div>"
         );
     }).join("");
+
+    // Wrap in inventory-grid for the new CSS layout
+    container.innerHTML = '<div class="inventory-grid">' + html + '</div>';
 }
 
 
@@ -548,8 +559,8 @@ function renderCart() {
                 "<br>" + item.quantityKg + " kg @ " +
                 money(item.pricePerKg) + " / kg</span>" +
                 '<span><strong>' + money(item.subtotal) + '</strong>' +
-                ' <button type="button" onclick="removeCart(' + index +
-                ')">REMOVE</button></span>' +
+                ' <button type="button" class="btn-danger" onclick="removeCart(' + index +
+                ')">Remove</button></span>' +
                 "</div>"
             );
         }).join("");

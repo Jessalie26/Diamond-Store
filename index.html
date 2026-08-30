@@ -3,480 +3,1301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diamond Store</title>
+    <title>Diamond Store — POS & Inventory</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        * { box-sizing: border-box; }
+    /* ═══════════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            color: #222;
-        }
+    :root {
+        --navy:       #0f1e35;
+        --navy-mid:   #1a2e4a;
+        --navy-light: #243a5e;
+        --gold:       #c9a84c;
+        --gold-light: #e2c47a;
+        --gold-pale:  #f5ecd2;
+        --white:      #ffffff;
+        --cream:      #faf9f6;
+        --gray-50:    #f8f9fa;
+        --gray-100:   #f1f3f5;
+        --gray-200:   #e9ecef;
+        --gray-300:   #dee2e6;
+        --gray-400:   #adb5bd;
+        --gray-500:   #6c757d;
+        --gray-700:   #495057;
+        --gray-900:   #212529;
+        --green:      #1a7a4a;
+        --green-bg:   #e8f5ee;
+        --red:        #c0392b;
+        --red-bg:     #fdecea;
+        --amber:      #b7770d;
+        --amber-bg:   #fff8e6;
+        --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
+        --shadow-md:  0 4px 16px rgba(0,0,0,.10);
+        --shadow-lg:  0 8px 32px rgba(0,0,0,.14);
+        --radius-sm:  6px;
+        --radius-md:  10px;
+        --radius-lg:  16px;
+        --transition: 0.18s ease;
+    }
 
-        .hidden { display: none !important; }
+    html { font-size: 15px; }
 
-        .page { min-height: 100vh; }
+    body {
+        font-family: 'Inter', Arial, sans-serif;
+        background: var(--gray-100);
+        color: var(--gray-900);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+    }
 
-        /* ── LOGIN ────────────────────────────────────── */
-        .login-container {
-            width: 420px;
-            max-width: 92%;
-            margin: 70px auto;
-            padding: 35px;
-            background: #fff;
-            border: 1px solid #ccc;
-            box-shadow: 0 5px 20px rgba(0,0,0,.08);
-        }
-        .login-container h1,
-        .login-container h2 { text-align: center; }
-        .login-container h1 { margin-bottom: 35px; }
+    .hidden { display: none !important; }
+    .page   { min-height: 100vh; }
 
-        /* ── FORMS ────────────────────────────────────── */
-        label {
-            display: block;
-            font-weight: bold;
-            margin-top: 16px;
-            margin-bottom: 7px;
-        }
-        input, select {
-            width: 100%;
-            padding: 13px;
-            border: 1px solid #aaa;
-            background: #eee;
-            font-size: 15px;
-        }
+    /* ═══════════════════════════════════════════════════════
+       DIAMOND LOGO SVG (inline, reusable via CSS)
+    ═══════════════════════════════════════════════════════ */
+    .ds-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .ds-logo-icon {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+    }
+    .ds-logo-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+    }
+    .ds-logo-text .brand-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--white);
+        letter-spacing: .04em;
+    }
+    .ds-logo-text .brand-sub {
+        font-size: .65rem;
+        font-weight: 400;
+        color: var(--gold-light);
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
 
-        /* ── BUTTONS ──────────────────────────────────── */
-        button {
-            border: 1px solid #555;
-            background: #fff;
-            padding: 12px 22px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 18px;
-        }
-        button:hover { background: #e8e8e8; }
-        .primary {
-            width: 100%;
-            background: #222;
-            color: #fff;
-            border-color: #222;
-        }
-        .primary:hover { background: #444; }
+    /* ═══════════════════════════════════════════════════════
+       TYPOGRAPHY HELPERS
+    ═══════════════════════════════════════════════════════ */
+    .page-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--navy);
+        letter-spacing: -.01em;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--gold-pale);
+    }
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--navy-mid);
+        margin: 28px 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title::before {
+        content: '';
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background: var(--gold);
+        border-radius: 2px;
+    }
 
-        /* ── HEADER ───────────────────────────────────── */
-        header {
-            background: #fff;
-            border-bottom: 1px solid #ccc;
-            padding: 18px 35px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        header h1 { margin: 0; }
+    /* ═══════════════════════════════════════════════════════
+       FORM ELEMENTS
+    ═══════════════════════════════════════════════════════ */
+    label {
+        display: block;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+        margin-top: 18px;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+    }
 
-        /* ── MAIN ─────────────────────────────────────── */
-        main {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 25px;
-        }
-        main h2 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+    input, select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--gray-300);
+        border-radius: var(--radius-sm);
+        background: var(--white);
+        font-family: inherit;
+        font-size: .95rem;
+        color: var(--gray-900);
+        transition: border-color var(--transition), box-shadow var(--transition);
+        outline: none;
+        appearance: none;
+    }
+    input:focus, select:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(201,168,76,.15);
+    }
+    input[readonly] {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        cursor: default;
+    }
+    select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236c757d' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 38px;
+    }
 
-        /* ── DASHBOARD GRID ───────────────────────────── */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-        .dashboard-grid button { min-height: 100px; }
+    /* ═══════════════════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════════════════ */
+    button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1.5px solid var(--gray-300);
+        background: var(--white);
+        color: var(--gray-900);
+        padding: 10px 20px;
+        border-radius: var(--radius-sm);
+        font-family: inherit;
+        font-size: .88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition);
+        letter-spacing: .02em;
+        margin-top: 14px;
+    }
+    button:hover {
+        background: var(--gray-100);
+        border-color: var(--gray-400);
+    }
+    button:active { transform: translateY(1px); }
 
-        /* ── SUMMARY CARDS ────────────────────────────── */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 30px;
-        }
-        .summary-card {
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 20px;
-        }
-        .summary-card span {
-            display: block;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        .summary-card strong { font-size: 22px; }
+    .btn-primary {
+        width: 100%;
+        background: var(--navy);
+        color: var(--white);
+        border-color: var(--navy);
+        padding: 13px 20px;
+        font-size: .95rem;
+        border-radius: var(--radius-sm);
+    }
+    .btn-primary:hover {
+        background: var(--navy-mid);
+        border-color: var(--navy-mid);
+    }
 
-        /* ── CART ─────────────────────────────────────── */
-        .cart-list {
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 10px;
-            min-height: 70px;
-        }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            padding: 15px;
-            border-bottom: 1px solid #ddd;
-        }
-        .cart-item:last-child { border-bottom: 0; }
-        .total-box {
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .total-box strong {
-            display: block;
-            font-size: 26px;
-            margin-top: 10px;
-        }
+    .btn-gold {
+        background: var(--gold);
+        color: var(--white);
+        border-color: var(--gold);
+    }
+    .btn-gold:hover {
+        background: var(--gold-light);
+        border-color: var(--gold-light);
+    }
 
-        /* ── INVENTORY ────────────────────────────────── */
-        .inventory-card {
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-        .inventory-details {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-        .low-stock { border: 2px solid #b00; }
+    .btn-danger {
+        background: var(--red-bg);
+        color: var(--red);
+        border-color: #f5c6c2;
+        font-size: .78rem;
+        padding: 5px 12px;
+        margin-top: 0;
+    }
+    .btn-danger:hover { background: #fbd7d4; }
 
-        /* ── MISC ─────────────────────────────────────── */
-        hr { border: 0; border-top: 1px solid #ccc; margin: 30px 0; }
-        .message { margin-top: 15px; font-weight: bold; }
+    .btn-outline {
+        background: transparent;
+        color: var(--navy);
+        border-color: var(--navy);
+    }
+    .btn-outline:hover { background: var(--navy); color: var(--white); }
 
-        /* ── RESPONSIVE ───────────────────────────────── */
-        @media (max-width: 700px) {
-            .dashboard-grid,
-            .summary-grid,
-            .inventory-details { grid-template-columns: 1fr; }
-            header { padding: 15px; }
-            main   { padding: 15px; }
-        }
+    /* Alias for existing .primary class — keeps JS working */
+    .primary {
+        width: 100%;
+        background: var(--navy);
+        color: var(--white);
+        border-color: var(--navy);
+        padding: 13px 20px;
+        font-size: .95rem;
+        border-radius: var(--radius-sm);
+        margin-top: 14px;
+    }
+    .primary:hover { background: var(--navy-mid); border-color: var(--navy-mid); }
+
+    /* ═══════════════════════════════════════════════════════
+       MESSAGE / ALERT
+    ═══════════════════════════════════════════════════════ */
+    .message {
+        margin-top: 12px;
+        font-size: .88rem;
+        font-weight: 500;
+        min-height: 20px;
+    }
+
+    hr {
+        border: 0;
+        border-top: 1px solid var(--gray-200);
+        margin: 28px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TOP HEADER BAR (all non-login pages)
+    ═══════════════════════════════════════════════════════ */
+    .app-header {
+        background: var(--navy);
+        padding: 0 32px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+
+    .app-header .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    #userDisplay {
+        font-size: .82rem;
+        color: var(--gold-light);
+        font-weight: 500;
+        letter-spacing: .02em;
+    }
+
+    .btn-logout {
+        background: transparent;
+        border: 1.5px solid rgba(201,168,76,.5);
+        color: var(--gold-light);
+        padding: 7px 16px;
+        font-size: .8rem;
+        border-radius: var(--radius-sm);
+        margin-top: 0;
+        letter-spacing: .04em;
+    }
+    .btn-logout:hover {
+        background: rgba(201,168,76,.15);
+        border-color: var(--gold-light);
+        color: var(--white);
+    }
+
+    .btn-back {
+        background: transparent;
+        border: 1.5px solid rgba(255,255,255,.3);
+        color: rgba(255,255,255,.85);
+        padding: 7px 16px;
+        font-size: .8rem;
+        border-radius: var(--radius-sm);
+        margin-top: 0;
+        letter-spacing: .04em;
+    }
+    .btn-back:hover {
+        background: rgba(255,255,255,.1);
+        border-color: rgba(255,255,255,.6);
+        color: var(--white);
+    }
+
+    /* Back arrow icon */
+    .btn-back::before {
+        content: '←';
+        margin-right: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       PAGE WRAPPER
+    ═══════════════════════════════════════════════════════ */
+    .page-wrapper {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 32px 24px 48px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LOGIN PAGE
+    ═══════════════════════════════════════════════════════ */
+    #loginPage {
+        background: linear-gradient(145deg, var(--navy) 0%, var(--navy-mid) 60%, #1e3a5f 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        min-height: 100vh;
+    }
+
+    .login-wrapper {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    /* Logo block above card */
+    .login-logo-block {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+    .login-logo-block .login-logo-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 12px;
+        display: block;
+    }
+    .login-logo-block .login-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--white);
+        letter-spacing: .06em;
+    }
+    .login-logo-block .login-tagline {
+        font-size: .75rem;
+        color: var(--gold-light);
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        margin-top: 3px;
+    }
+
+    /* The card */
+    .login-container {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 36px 36px 32px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.35);
+        border-top: 4px solid var(--gold);
+    }
+
+    .login-container h2 {
+        text-align: center;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+    }
+
+    /* Override label inside login */
+    .login-container label {
+        text-transform: none;
+        font-size: .85rem;
+        letter-spacing: 0;
+        color: var(--gray-700);
+        font-weight: 600;
+    }
+
+    .login-container .btn-primary {
+        margin-top: 24px;
+        background: var(--navy);
+        font-size: .95rem;
+        padding: 13px;
+        letter-spacing: .04em;
+    }
+    .login-container .btn-primary:hover { background: var(--navy-mid); }
+
+    /* Divider line under login form heading */
+    .login-divider {
+        height: 1px;
+        background: var(--gray-200);
+        margin: 0 0 20px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       DASHBOARD
+    ═══════════════════════════════════════════════════════ */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 8px;
+    }
+
+    .nav-card {
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 22px 16px 18px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--navy);
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        transition: all var(--transition);
+        min-height: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: var(--shadow-sm);
+        margin-top: 0;
+    }
+    .nav-card:hover {
+        border-color: var(--gold);
+        box-shadow: 0 4px 18px rgba(201,168,76,.18);
+        background: var(--white);
+        transform: translateY(-2px);
+        color: var(--navy);
+    }
+    .nav-card:active { transform: translateY(0); }
+
+    .nav-card .nav-icon {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    /* Summary cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-top: 20px;
+    }
+
+    .summary-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 20px 22px;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+    .summary-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--gold);
+    }
+    .summary-card span {
+        display: block;
+        font-size: .72rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .summary-card strong {
+        display: block;
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: var(--navy);
+        line-height: 1.2;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       POS PAGE
+    ═══════════════════════════════════════════════════════ */
+    .pos-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .pos-panel {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .pos-panel h3 {
+        font-size: .9rem;
+        font-weight: 700;
+        color: var(--navy);
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    /* Cart */
+    .cart-list {
+        background: var(--gray-50);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-sm);
+        min-height: 80px;
+        overflow: hidden;
+    }
+    .cart-list p {
+        padding: 16px;
+        color: var(--gray-400);
+        font-size: .88rem;
+        text-align: center;
+    }
+
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--gray-200);
+        background: var(--white);
+    }
+    .cart-item:last-child { border-bottom: 0; }
+    .cart-item span:first-child {
+        font-size: .88rem;
+        color: var(--gray-900);
+        line-height: 1.5;
+    }
+    .cart-item span:last-child {
+        text-align: right;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+    }
+    .cart-item strong {
+        font-size: .95rem;
+        color: var(--navy);
+    }
+
+    .total-box {
+        background: var(--navy);
+        border-radius: var(--radius-sm);
+        padding: 16px 20px;
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .total-box label {
+        margin: 0;
+        color: rgba(255,255,255,.75);
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+    .total-box strong {
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: var(--gold-light);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       INVENTORY CARDS
+    ═══════════════════════════════════════════════════════ */
+    .inventory-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 4px;
+    }
+
+    .inventory-card {
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: box-shadow var(--transition);
+    }
+    .inventory-card:hover { box-shadow: var(--shadow-md); }
+    .inventory-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 14px;
+    }
+
+    .inventory-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .inventory-details div {
+        background: var(--gray-50);
+        border-radius: var(--radius-sm);
+        padding: 8px 10px;
+        font-size: .8rem;
+        text-align: center;
+    }
+    .inventory-details div strong {
+        display: block;
+        font-size: .7rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        margin-bottom: 3px;
+        font-weight: 600;
+    }
+
+    .inventory-card .price-line {
+        font-size: .85rem;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+    }
+    .inventory-card .price-line strong {
+        color: var(--navy);
+        font-weight: 700;
+    }
+
+    /* Stock badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .badge-available {
+        background: var(--green-bg);
+        color: var(--green);
+    }
+    .badge-low {
+        background: var(--amber-bg);
+        color: var(--amber);
+    }
+    .badge-out {
+        background: var(--red-bg);
+        color: var(--red);
+    }
+
+    /* Override existing .low-stock class */
+    .low-stock {
+        border-color: #f5c06a !important;
+        background: #fffdf5 !important;
+    }
+
+    /* Admin stock editor panel */
+    .editor-panel {
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+        margin-top: 28px;
+    }
+    #adminStockEditor {
+        margin-top: 28px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FORM CARD (shared by Shift, Supplier, Spoilage)
+    ═══════════════════════════════════════════════════════ */
+    .form-card {
+        background: var(--white);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 28px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 24px;
+    }
+
+    /* Shift info area */
+    #shiftInfo {
+        background: var(--gray-50);
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--radius-sm);
+        min-height: 80px;
+        margin-bottom: 4px;
+    }
+    #shiftInfo p {
+        padding: 16px;
+        color: var(--gray-400);
+        font-size: .88rem;
+    }
+    #shiftInfo .summary-card {
+        margin: 12px;
+        border-radius: var(--radius-sm);
+    }
+    #shiftInfo h3 {
+        font-size: .85rem;
+        font-weight: 700;
+        color: var(--navy);
+        padding: 0 12px 8px;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       ANALYTICS
+    ═══════════════════════════════════════════════════════ */
+    #productAnalytics {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 14px;
+        background: transparent;
+        border: 0;
+        padding: 0;
+        min-height: auto;
+        margin-top: 4px;
+    }
+    #productAnalytics p {
+        grid-column: 1 / -1;
+        padding: 20px;
+        text-align: center;
+        color: var(--gray-400);
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+    }
+    #productAnalytics .summary-card {
+        margin: 0;
+    }
+    #productAnalytics .summary-card::after {
+        background: var(--navy-light);
+    }
+
+    .export-btn {
+        background: var(--navy);
+        color: var(--white);
+        border-color: var(--navy);
+        padding: 11px 24px;
+        border-radius: var(--radius-sm);
+        font-size: .88rem;
+        margin-top: 20px;
+    }
+    .export-btn:hover { background: var(--navy-mid); }
+
+    /* ═══════════════════════════════════════════════════════
+       SHIFT TRANSACTION ROWS
+    ═══════════════════════════════════════════════════════ */
+    #shiftInfo .cart-item {
+        border-radius: 0;
+        padding: 10px 16px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+        .pos-layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+        .dashboard-grid  { grid-template-columns: repeat(2, 1fr); }
+        .summary-grid    { grid-template-columns: 1fr; }
+        .inventory-grid  { grid-template-columns: 1fr; }
+        .inventory-details { grid-template-columns: repeat(3,1fr); }
+        .app-header      { padding: 0 16px; }
+        .page-wrapper    { padding: 20px 14px 40px; }
+        .login-container { padding: 28px 22px 24px; }
+        #productAnalytics { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 420px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
     </style>
 </head>
 <body>
-
 <div id="app">
 
-    <!-- ═══════════════════════════════════════════════════════
-         1. LOGIN
-    ═══════════════════════════════════════════════════════ -->
-    <section id="loginPage" class="page">
+<!-- ═══════════════════════════════════════════════════════
+     1. LOGIN
+═══════════════════════════════════════════════════════ -->
+<section id="loginPage" class="page">
+    <div class="login-wrapper">
+
+        <!-- Logo above card -->
+        <div class="login-logo-block">
+            <!-- Diamond SVG logo -->
+            <svg class="login-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="40,8 72,28 40,38" fill="#243a5e" opacity=".9"/>
+                <polygon points="8,28 40,38 40,8" fill="#1a2e4a" opacity=".7"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,28 8,52 40,38" fill="#c9a84c" opacity=".5"/>
+                <polygon points="72,52 40,72 40,38" fill="#e2c47a" opacity=".75"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+                <polygon points="40,38 72,28 8,28" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity=".4"/>
+            </svg>
+            <div class="login-brand">DIAMOND STORE</div>
+            <div class="login-tagline">POS &amp; Inventory Management</div>
+        </div>
+
+        <!-- Login card -->
         <div class="login-container">
-            <h1>DIAMOND STORE</h1>
-            <h2>LOGIN ACCESS</h2>
+            <h2>Sign in to your account</h2>
+            <div class="login-divider"></div>
 
             <label for="username">User ID / Username</label>
             <input id="username" type="text"
-                   placeholder="Enter User ID or Username" autocomplete="username">
+                   placeholder="Enter username"
+                   autocomplete="username">
 
             <label for="password">Password</label>
             <input id="password" type="password"
-                   placeholder="Enter Password" autocomplete="current-password">
+                   placeholder="Enter password"
+                   autocomplete="current-password">
 
-            <label for="role">Select Role</label>
+            <label for="role">Role</label>
             <select id="role">
                 <option value="Cashier">Cashier</option>
                 <option value="Admin">Admin</option>
             </select>
 
-            <button type="button" onclick="login()">LOGIN</button>
+            <button type="button" class="btn-primary" onclick="login()">
+                LOGIN
+            </button>
 
             <p id="loginMessage" class="message"></p>
         </div>
-    </section>
+
+    </div>
+</section>
 
 
-    <!-- ═══════════════════════════════════════════════════════
-         DASHBOARD
-    ═══════════════════════════════════════════════════════ -->
-    <section id="dashboardPage" class="page hidden">
-        <header>
-            <div>
-                <h1>DIAMOND STORE</h1>
-                <span id="userDisplay"></span>
+<!-- ═══════════════════════════════════════════════════════
+     DASHBOARD
+═══════════════════════════════════════════════════════ -->
+<section id="dashboardPage" class="page hidden">
+    <header class="app-header">
+        <div class="ds-logo">
+            <!-- Small header logo -->
+            <svg class="ds-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="40,8 72,28 40,38" fill="#243a5e" opacity=".9"/>
+                <polygon points="8,28 40,38 40,8" fill="#1a2e4a" opacity=".7"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,28 8,52 40,38" fill="#c9a84c" opacity=".5"/>
+                <polygon points="72,52 40,72 40,38" fill="#e2c47a" opacity=".75"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+            </svg>
+            <div class="ds-logo-text">
+                <span class="brand-name">Diamond Store</span>
+                <span class="brand-sub">Management System</span>
             </div>
-            <button type="button" onclick="logout()">LOGOUT</button>
-        </header>
+        </div>
+        <div class="header-right">
+            <span id="userDisplay"></span>
+            <button type="button" class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </header>
 
-        <main>
-            <h2>DASHBOARD</h2>
+    <div class="page-wrapper">
+        <h2 class="page-title">Dashboard</h2>
 
-            <div class="dashboard-grid">
-                <button type="button" onclick="openPOS()">
-                    POS CHECKOUT
-                </button>
-                <button type="button" onclick="openStock()">
-                    STOCK TRACKER
-                </button>
-                <button type="button" id="shiftButton" onclick="openShift()">
-                    SHIFT SALES
-                </button>
-                <button type="button" id="supplierButton" onclick="openSuppliers()">
-                    SUPPLIERS
-                </button>
-                <button type="button" id="spoilageButton" onclick="openSpoilage()">
-                    SPOILAGE
-                </button>
-                <button type="button" id="analyticsButton" onclick="openAnalytics()">
-                    SALES ANALYTICS
-                </button>
-            </div>
-
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <span>TODAY REVENUE</span>
-                    <strong id="dashRevenue">P0.00</strong>
-                </div>
-                <div class="summary-card">
-                    <span>TOTAL PROFIT</span>
-                    <strong id="dashProfit">P0.00</strong>
-                </div>
-                <div class="summary-card">
-                    <span>TOP SELLING</span>
-                    <strong id="dashTop">-</strong>
-                </div>
-            </div>
-        </main>
-    </section>
-
-
-    <!-- ═══════════════════════════════════════════════════════
-         2. POS CHECKOUT
-    ═══════════════════════════════════════════════════════ -->
-    <section id="posPage" class="page hidden">
-        <header>
-            <h1>DIAMOND STORE</h1>
-            <button type="button" onclick="showDashboard()">BACK</button>
-        </header>
-
-        <main>
-            <h2>POS CHECKOUT</h2>
-
-            <label for="posRice">Rice Type</label>
-            <select id="posRice" onchange="updatePOSPrice()"></select>
-
-            <label for="posQuantity">Quantity (kg)</label>
-            <input id="posQuantity" type="number" min="0.01" step="0.01" value="1">
-
-            <label for="posPrice">Price per kg</label>
-            <input id="posPrice" readonly>
-
-            <button type="button" onclick="addToCart()">ADD TO CART</button>
-
-            <h3>CART SUMMARY</h3>
-            <div id="cartList" class="cart-list"><p>Cart is empty.</p></div>
-
-            <div class="total-box">
-                <label>Total Amount</label>
-                <strong id="cartTotal">P0.00</strong>
-            </div>
-
-            <label for="cashReceived">Cash Handed</label>
-            <input id="cashReceived" type="number" min="0" step="0.01"
-                   value="0" oninput="calculateChange()">
-
-            <label for="changeAmount">Change</label>
-            <input id="changeAmount" readonly>
-
-            <button type="button" class="primary" onclick="completeSale()">
-                COMPLETE SALE
+        <div class="dashboard-grid">
+            <button type="button" class="nav-card" onclick="openPOS()">
+                <span class="nav-icon">🧾</span>
+                POS Checkout
             </button>
+            <button type="button" class="nav-card" onclick="openStock()">
+                <span class="nav-icon">📦</span>
+                Stock Tracker
+            </button>
+            <button type="button" class="nav-card" id="shiftButton" onclick="openShift()">
+                <span class="nav-icon">🕐</span>
+                Shift Sales
+            </button>
+            <button type="button" class="nav-card" id="supplierButton" onclick="openSuppliers()">
+                <span class="nav-icon">🚚</span>
+                Suppliers
+            </button>
+            <button type="button" class="nav-card" id="spoilageButton" onclick="openSpoilage()">
+                <span class="nav-icon">⚠️</span>
+                Spoilage
+            </button>
+            <button type="button" class="nav-card" id="analyticsButton" onclick="openAnalytics()">
+                <span class="nav-icon">📊</span>
+                Sales Analytics
+            </button>
+        </div>
 
-            <p id="posMessage" class="message"></p>
-        </main>
-    </section>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <span>Today's Revenue</span>
+                <strong id="dashRevenue">P0.00</strong>
+            </div>
+            <div class="summary-card">
+                <span>Total Profit</span>
+                <strong id="dashProfit">P0.00</strong>
+            </div>
+            <div class="summary-card">
+                <span>Top Selling</span>
+                <strong id="dashTop">—</strong>
+            </div>
+        </div>
+    </div>
+</section>
 
 
-    <!-- ═══════════════════════════════════════════════════════
-         3. STOCK TRACKER
-    ═══════════════════════════════════════════════════════ -->
-    <section id="stockPage" class="page hidden">
-        <header>
-            <h1>DIAMOND STORE</h1>
-            <button type="button" onclick="showDashboard()">BACK</button>
-        </header>
+<!-- ═══════════════════════════════════════════════════════
+     2. POS CHECKOUT
+═══════════════════════════════════════════════════════ -->
+<section id="posPage" class="page hidden">
+    <header class="app-header">
+        <div class="ds-logo">
+            <svg class="ds-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,28 8,52 40,38" fill="#c9a84c" opacity=".5"/>
+                <polygon points="72,52 40,72 40,38" fill="#e2c47a" opacity=".75"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+            </svg>
+            <div class="ds-logo-text">
+                <span class="brand-name">Diamond Store</span>
+                <span class="brand-sub">POS Checkout</span>
+            </div>
+        </div>
+        <button type="button" class="btn-back" onclick="showDashboard()">Dashboard</button>
+    </header>
 
-        <main>
-            <h2>STOCK TRACKER</h2>
+    <div class="page-wrapper">
+        <h2 class="page-title">POS Checkout</h2>
 
-            <div id="inventoryList">Loading inventory...</div>
+        <div class="pos-layout">
+            <!-- Left: product selection -->
+            <div class="pos-panel">
+                <h3>Select Product</h3>
 
-            <div id="adminStockEditor">
-                <h3>ADMIN — EDIT INVENTORY</h3>
+                <label for="posRice">Rice Type</label>
+                <select id="posRice" onchange="updatePOSPrice()"></select>
 
+                <label for="posQuantity">Quantity (kg)</label>
+                <input id="posQuantity" type="number" min="0.01" step="0.01" value="1">
+
+                <label for="posPrice">Price per kg</label>
+                <input id="posPrice" readonly placeholder="—">
+
+                <button type="button" class="btn-gold" style="width:100%; margin-top:20px;" onclick="addToCart()">
+                    + Add to Cart
+                </button>
+            </div>
+
+            <!-- Right: cart & payment -->
+            <div class="pos-panel">
+                <h3>Cart &amp; Payment</h3>
+
+                <div id="cartList" class="cart-list"><p>Cart is empty.</p></div>
+
+                <div class="total-box">
+                    <label>Total Amount</label>
+                    <strong id="cartTotal">P0.00</strong>
+                </div>
+
+                <label for="cashReceived">Cash Handed</label>
+                <input id="cashReceived" type="number" min="0" step="0.01"
+                       value="0" oninput="calculateChange()">
+
+                <label for="changeAmount">Change</label>
+                <input id="changeAmount" readonly placeholder="—">
+
+                <button type="button" class="primary" onclick="completeSale()" style="margin-top:20px;">
+                    ✓ Complete Sale
+                </button>
+
+                <p id="posMessage" class="message"></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     3. STOCK TRACKER
+═══════════════════════════════════════════════════════ -->
+<section id="stockPage" class="page hidden">
+    <header class="app-header">
+        <div class="ds-logo">
+            <svg class="ds-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+            </svg>
+            <div class="ds-logo-text">
+                <span class="brand-name">Diamond Store</span>
+                <span class="brand-sub">Stock Tracker</span>
+            </div>
+        </div>
+        <button type="button" class="btn-back" onclick="showDashboard()">Dashboard</button>
+    </header>
+
+    <div class="page-wrapper">
+        <h2 class="page-title">Stock Tracker</h2>
+
+        <div id="inventoryList" class="inventory-grid">
+            <p style="color:var(--gray-400);padding:20px;text-align:center;background:var(--white);border-radius:var(--radius-md);border:1px solid var(--gray-200);">Loading inventory...</p>
+        </div>
+
+        <div id="adminStockEditor">
+            <h3 class="section-title">Edit Inventory</h3>
+
+            <div class="form-card">
                 <label for="stockRice">Rice Type</label>
                 <select id="stockRice" onchange="loadStockFields()"></select>
 
-                <label for="stockSacks">Sacks</label>
-                <input id="stockSacks" type="number" min="0">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                    <div>
+                        <label for="stockSacks">Sacks</label>
+                        <input id="stockSacks" type="number" min="0">
+                    </div>
+                    <div>
+                        <label for="stockLoose">Loose Kg</label>
+                        <input id="stockLoose" type="number" min="0" step="0.01">
+                    </div>
+                    <div>
+                        <label for="stockPrice">Price / kg</label>
+                        <input id="stockPrice" type="number" min="0" step="0.01">
+                    </div>
+                </div>
 
-                <label for="stockLoose">Loose Kg</label>
-                <input id="stockLoose" type="number" min="0" step="0.01">
-
-                <label for="stockPrice">Price per kg</label>
-                <input id="stockPrice" type="number" min="0" step="0.01">
-
-                <button type="button" onclick="updateStock()">UPDATE STOCK</button>
-
+                <button type="button" class="btn-primary" style="width:auto;padding:10px 28px;margin-top:20px;" onclick="updateStock()">
+                    Update Stock
+                </button>
                 <p id="stockMessage" class="message"></p>
             </div>
-        </main>
-    </section>
+        </div>
+    </div>
+</section>
 
 
-    <!-- ═══════════════════════════════════════════════════════
-         4. SHIFT SALES
-    ═══════════════════════════════════════════════════════ -->
-    <section id="shiftPage" class="page hidden">
-        <header>
-            <h1>DIAMOND STORE</h1>
-            <button type="button" onclick="showDashboard()">BACK</button>
-        </header>
+<!-- ═══════════════════════════════════════════════════════
+     4. SHIFT SALES
+═══════════════════════════════════════════════════════ -->
+<section id="shiftPage" class="page hidden">
+    <header class="app-header">
+        <div class="ds-logo">
+            <svg class="ds-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+            </svg>
+            <div class="ds-logo-text">
+                <span class="brand-name">Diamond Store</span>
+                <span class="brand-sub">Shift Sales</span>
+            </div>
+        </div>
+        <button type="button" class="btn-back" onclick="showDashboard()">Dashboard</button>
+    </header>
 
-        <main>
-            <h2>SHIFT SALES SUMMARY</h2>
+    <div class="page-wrapper">
+        <h2 class="page-title">Shift Sales Summary</h2>
 
+        <div class="form-card">
+            <h3 class="section-title" style="margin-top:0;">Start Shift</h3>
             <label for="openingCash">Opening Cash</label>
-            <input id="openingCash" type="number" min="0" step="0.01" value="0">
+            <input id="openingCash" type="number" min="0" step="0.01" value="0"
+                   style="max-width:280px;">
+            <button type="button" class="btn-gold" style="margin-top:14px;" onclick="startShift()">
+                ▶ Start Shift
+            </button>
+        </div>
 
-            <button type="button" onclick="startShift()">START SHIFT</button>
+        <h3 class="section-title">Active Shift</h3>
+        <div id="shiftInfo" class="cart-list"><p>No active shift.</p></div>
 
-            <hr>
+        <div class="form-card" style="margin-top:24px;">
+            <h3 class="section-title" style="margin-top:0;">Close Shift</h3>
+            <label for="closingCash">Closing Cash</label>
+            <input id="closingCash" type="number" min="0" step="0.01" value="0"
+                   style="max-width:280px;">
+            <button type="button" class="btn-outline" style="margin-top:14px;" onclick="closeShiftNow()">
+                ■ Close Shift
+            </button>
+        </div>
+    </div>
+</section>
 
-            <div id="shiftInfo" class="cart-list">
-                <p>No active shift.</p>
+
+<!-- ═══════════════════════════════════════════════════════
+     5. SUPPLIERS & SHIPMENTS
+═══════════════════════════════════════════════════════ -->
+<section id="supplierPage" class="page hidden">
+    <header class="app-header">
+        <div class="ds-logo">
+            <svg class="ds-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+            </svg>
+            <div class="ds-logo-text">
+                <span class="brand-name">Diamond Store</span>
+                <span class="brand-sub">Suppliers &amp; Shipments</span>
+            </div>
+        </div>
+        <button type="button" class="btn-back" onclick="showDashboard()">Dashboard</button>
+    </header>
+
+    <div class="page-wrapper">
+        <h2 class="page-title">Supplier &amp; Shipments</h2>
+
+        <div class="form-card">
+            <h3 class="section-title" style="margin-top:0;">Add Supplier</h3>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                    <label for="supplierName">Supplier Name</label>
+                    <input id="supplierName" placeholder="e.g. Golden Grain Trading">
+                </div>
+                <div>
+                    <label for="supplierContact">Contact Number</label>
+                    <input id="supplierContact" placeholder="e.g. 09XX-XXX-XXXX">
+                </div>
+            </div>
+            <label for="supplierAddress">Address</label>
+            <input id="supplierAddress" placeholder="Full address">
+
+            <button type="button" class="btn-primary" style="width:auto;padding:10px 28px;margin-top:20px;" onclick="addSupplier()">
+                + Add Supplier
+            </button>
+        </div>
+
+        <hr>
+
+        <div class="form-card">
+            <h3 class="section-title" style="margin-top:0;">Record Shipment</h3>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div>
+                    <label for="shipmentRice">Rice Type</label>
+                    <select id="shipmentRice"></select>
+                </div>
+                <div>
+                    <label for="shipmentSacks">Sacks Received</label>
+                    <input id="shipmentSacks" type="number" min="1">
+                </div>
+                <div>
+                    <label for="shipmentCost">Total Cost</label>
+                    <input id="shipmentCost" type="number" min="0" step="0.01">
+                </div>
             </div>
 
-            <label for="closingCash">Closing Cash</label>
-            <input id="closingCash" type="number" min="0" step="0.01" value="0">
+            <button type="button" class="btn-gold" style="margin-top:20px;" onclick="saveShipment()">
+                Save Shipment
+            </button>
+        </div>
 
-            <button type="button" onclick="closeShiftNow()">CLOSE SHIFT</button>
-        </main>
-    </section>
-
-
-    <!-- ═══════════════════════════════════════════════════════
-         5. SUPPLIERS & SHIPMENTS
-    ═══════════════════════════════════════════════════════ -->
-    <section id="supplierPage" class="page hidden">
-        <header>
-            <h1>DIAMOND STORE</h1>
-            <button type="button" onclick="showDashboard()">BACK</button>
-        </header>
-
-        <main>
-            <h2>SUPPLIER &amp; SHIPMENTS</h2>
-
-            <label for="supplierName">Supplier Name</label>
-            <input id="supplierName" placeholder="Golden Grain Trading">
-
-            <label for="supplierContact">Contact Number</label>
-            <input id="supplierContact">
-
-            <label for="supplierAddress">Address</label>
-            <input id="supplierAddress">
-
-            <button type="button" onclick="addSupplier()">ADD SUPPLIER</button>
-
-            <hr>
-
-            <label for="shipmentRice">Rice Type</label>
-            <select id="shipmentRice"></select>
-
-            <label for="shipmentSacks">Sacks Received</label>
-            <input id="shipmentSacks" type="number" min="1">
-
-            <label for="shipmentCost">Total Cost</label>
-            <input id="shipmentCost" type="number" min="0" step="0.01">
-
-            <button type="button" onclick="saveShipment()">SAVE SHIPMENT</button>
-
-            <p id="supplierMessage" class="message"></p>
-        </main>
-    </section>
+        <p id="supplierMessage" class="message"></p>
+    </div>
+</section>
 
 
-    <!-- ═══════════════════════════════════════════════════════
-         6. SPOILAGE LOGGER
-    ═══════════════════════════════════════════════════════ -->
-    <section id="spoilagePage" class="page hidden">
-        <header>
-            <h1>DIAMOND STORE</h1>
-            <button type="button" onclick="showDashboard()">BACK</button>
-        </header>
+<!-- ═══════════════════════════════════════════════════════
+     6. SPOILAGE LOGGER
+═══════════════════════════════════════════════════════ -->
+<section id="spoilagePage" class="page hidden">
+    <header class="app-header">
+        <div class="ds-logo">
+            <svg class="ds-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+            </svg>
+            <div class="ds-logo-text">
+                <span class="brand-name">Diamond Store</span>
+                <span class="brand-sub">Spoilage Logger</span>
+            </div>
+        </div>
+        <button type="button" class="btn-back" onclick="showDashboard()">Dashboard</button>
+    </header>
 
-        <main>
-            <h2>SPOILAGE LOGGER</h2>
+    <div class="page-wrapper">
+        <h2 class="page-title">Spoilage Logger</h2>
 
-            <label for="spoilageRice">Rice Type</label>
-            <select id="spoilageRice"></select>
+        <div class="form-card">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div>
+                    <label for="spoilageRice">Rice Type</label>
+                    <select id="spoilageRice"></select>
+                </div>
+                <div>
+                    <label for="damagedKg">Damaged Weight (kg)</label>
+                    <input id="damagedKg" type="number" min="0.01" step="0.01">
+                </div>
+                <div>
+                    <label for="spoilageReason">Reason</label>
+                    <input id="spoilageReason" placeholder="e.g. Wet Grain">
+                </div>
+            </div>
 
-            <label for="damagedKg">Damaged Weight (kg)</label>
-            <input id="damagedKg" type="number" min="0.01" step="0.01">
-
-            <label for="spoilageReason">Reason</label>
-            <input id="spoilageReason" placeholder="e.g. Wet Grain, Pest Damage">
-
-            <button type="button" onclick="recordSpoilage()">DEDUCT STOCK</button>
+            <button type="button" style="background:var(--red);color:#fff;border-color:var(--red);margin-top:20px;" onclick="recordSpoilage()">
+                Deduct Stock
+            </button>
 
             <p id="spoilageMessage" class="message"></p>
-        </main>
-    </section>
+        </div>
+    </div>
+</section>
 
 
-    <!-- ═══════════════════════════════════════════════════════
-         7. SALES ANALYTICS
-    ═══════════════════════════════════════════════════════ -->
-    <section id="analyticsPage" class="page hidden">
-        <header>
-            <h1>DIAMOND STORE</h1>
-            <button type="button" onclick="showDashboard()">BACK</button>
-        </header>
-
-        <main>
-            <h2>SALES ANALYTICS</h2>
-
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <span>TOTAL DAILY REVENUE</span>
-                    <strong id="analyticsRevenue">P0.00</strong>
-                </div>
-                <div class="summary-card">
-                    <span>TOTAL PROFIT</span>
-                    <strong id="analyticsProfit">P0.00</strong>
-                </div>
-                <div class="summary-card">
-                    <span>TOP SELLING RICE</span>
-                    <strong id="analyticsTop">-</strong>
-                </div>
+<!-- ═══════════════════════════════════════════════════════
+     7. SALES ANALYTICS
+═══════════════════════════════════════════════════════ -->
+<section id="analyticsPage" class="page hidden">
+    <header class="app-header">
+        <div class="ds-logo">
+            <svg class="ds-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="40,8 72,28 72,52 40,72 8,52 8,28" fill="#1a2e4a" stroke="#c9a84c" stroke-width="2.5"/>
+                <polygon points="72,28 72,52 40,38" fill="#c9a84c" opacity=".85"/>
+                <polygon points="8,52 40,72 40,38" fill="#c9a84c" opacity=".65"/>
+            </svg>
+            <div class="ds-logo-text">
+                <span class="brand-name">Diamond Store</span>
+                <span class="brand-sub">Sales Analytics</span>
             </div>
+        </div>
+        <button type="button" class="btn-back" onclick="showDashboard()">Dashboard</button>
+    </header>
 
-            <h3>PRODUCT PERFORMANCE</h3>
-            <div id="productAnalytics" class="cart-list">
-                <p>No sales data yet.</p>
+    <div class="page-wrapper">
+        <h2 class="page-title">Sales Analytics</h2>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <span>Total Daily Revenue</span>
+                <strong id="analyticsRevenue">P0.00</strong>
             </div>
+            <div class="summary-card">
+                <span>Total Profit</span>
+                <strong id="analyticsProfit">P0.00</strong>
+            </div>
+            <div class="summary-card">
+                <span>Top Selling Rice</span>
+                <strong id="analyticsTop">—</strong>
+            </div>
+        </div>
 
-            <button type="button" onclick="exportReport()">
-                EXPORT SALES REPORT
-            </button>
-        </main>
-    </section>
+        <h3 class="section-title" style="margin-top:32px;">Product Performance</h3>
+        <div id="productAnalytics">
+            <p>No sales data yet.</p>
+        </div>
+
+        <button type="button" class="export-btn" onclick="exportReport()">
+            ↓ Export Sales Report (CSV)
+        </button>
+    </div>
+</section>
 
 </div><!-- #app -->
 
