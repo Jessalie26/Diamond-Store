@@ -1,8 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -12,31 +12,293 @@
 
     <title>Diamond Store POS</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+        }
+
+
+        .hidden {
+            display: none !important;
+        }
+
+
+        .page {
+            min-height: 100vh;
+        }
+
+
+        /* LOGIN */
+
+        .login-container {
+            width: 420px;
+            max-width: 92%;
+            margin: 70px auto;
+            padding: 35px;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 5px 20px rgba(0,0,0,.08);
+        }
+
+
+        .login-container h1,
+        .login-container h2 {
+            text-align: center;
+        }
+
+
+        .login-container h1 {
+            margin-bottom: 35px;
+        }
+
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 16px;
+            margin-bottom: 7px;
+        }
+
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #aaa;
+            background: #eee;
+            font-size: 15px;
+        }
+
+
+        button {
+            border: 1px solid #555;
+            background: white;
+            padding: 12px 22px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 18px;
+        }
+
+
+        button:hover {
+            background: #e8e8e8;
+        }
+
+
+        .primary {
+            width: 100%;
+            background: #222;
+            color: white;
+            border-color: #222;
+        }
+
+
+        header {
+            background: white;
+            border-bottom: 1px solid #ccc;
+            padding: 18px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        header h1 {
+            margin: 0;
+        }
+
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 25px;
+        }
+
+
+        main h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(3, 1fr);
+            gap: 15px;
+        }
+
+
+        .dashboard-grid button {
+            min-height: 100px;
+        }
+
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+
+        .summary-card {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+
+
+        .summary-card span {
+            display: block;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+
+        .summary-card strong {
+            font-size: 22px;
+        }
+
+
+        .cart-list {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 70px;
+        }
+
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+
+        .cart-item:last-child {
+            border-bottom: 0;
+        }
+
+
+        .total-box {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+
+        .total-box strong {
+            display: block;
+            font-size: 26px;
+            margin-top: 10px;
+        }
+
+
+        .inventory-card {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+
+        .inventory-details {
+            display: grid;
+            grid-template-columns:
+                repeat(3, 1fr);
+            gap: 10px;
+        }
+
+
+        .low-stock {
+            border: 2px solid #777;
+        }
+
+
+        hr {
+            border: 0;
+            border-top: 1px solid #ccc;
+            margin: 30px 0;
+        }
+
+
+        .message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+
+        @media (max-width: 700px) {
+
+            .dashboard-grid,
+            .summary-grid,
+            .inventory-details {
+                grid-template-columns: 1fr;
+            }
+
+
+            header {
+                padding: 15px;
+            }
+
+
+            main {
+                padding: 15px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
 
 <body>
 
+
 <div id="app">
 
+
     <!-- ================================================= -->
-    <!-- LOGIN -->
+    <!-- 1. LOGIN -->
     <!-- ================================================= -->
 
-    <section id="loginPage" class="page">
+    <section
+        id="loginPage"
+        class="page"
+    >
 
         <div class="login-container">
 
-            <h1>DIAMOND STORE</h1>
+            <h1>
+                DIAMOND STORE
+            </h1>
 
-            <h2>LOGIN ACCESS</h2>
 
-            <label for="username">
+            <h2>
+                LOGIN ACCESS
+            </h2>
+
+
+            <label>
                 User ID / Username
             </label>
+
 
             <input
                 id="username"
@@ -44,9 +306,11 @@
                 placeholder="Enter User ID or Username"
             >
 
-            <label for="password">
+
+            <label>
                 Password
             </label>
+
 
             <input
                 id="password"
@@ -54,14 +318,24 @@
                 placeholder="Enter Password"
             >
 
-            <label for="role">
+
+            <label>
                 Select Role
             </label>
 
+
             <select id="role">
-                <option value="Cashier">Cashier</option>
-                <option value="Admin">Admin</option>
+
+                <option value="Cashier">
+                    Cashier
+                </option>
+
+                <option value="Admin">
+                    Admin
+                </option>
+
             </select>
+
 
             <button
                 type="button"
@@ -70,7 +344,11 @@
                 LOGIN
             </button>
 
-            <p id="loginMessage"></p>
+
+            <p
+                id="loginMessage"
+                class="message"
+            ></p>
 
         </div>
 
@@ -89,13 +367,20 @@
         <header>
 
             <div>
-                <h1>DIAMOND STORE</h1>
-                <span id="userDisplay"></span>
+
+                <h1>
+                    DIAMOND STORE
+                </h1>
+
+                <span
+                    id="userDisplay"
+                ></span>
+
             </div>
+
 
             <button
                 type="button"
-                class="logout"
                 onclick="logout()"
             >
                 LOGOUT
@@ -103,54 +388,65 @@
 
         </header>
 
+
         <main>
 
-            <h2>DASHBOARD</h2>
+            <h2>
+                DASHBOARD
+            </h2>
 
-            <div class="dashboard-grid">
+
+            <div
+                class="dashboard-grid"
+            >
 
                 <button
                     type="button"
-                    onclick="showPage('posPage')"
+                    onclick="openPOS()"
                 >
                     POS CHECKOUT
                 </button>
 
+
                 <button
                     type="button"
-                    onclick="showStock()"
+                    onclick="openStock()"
                 >
                     STOCK TRACKER
                 </button>
 
+
                 <button
                     type="button"
-                    onclick="showShift()"
                     id="shiftButton"
+                    onclick="openShift()"
                 >
                     SHIFT SALES
                 </button>
 
+
                 <button
                     type="button"
-                    onclick="showSupplier()"
                     id="supplierButton"
+                    onclick="openSuppliers()"
                 >
                     SUPPLIERS
                 </button>
 
+
                 <button
                     type="button"
-                    onclick="showSpoilage()"
                     id="spoilageButton"
+                    onclick="openSpoilage()"
                 >
                     SPOILAGE
                 </button>
 
+
                 <button
                     type="button"
-                    onclick="showAnalytics()"
                     id="analyticsButton"
+                    onclick="openAnalytics()"
                 >
                     SALES ANALYTICS
                 </button>
@@ -158,21 +454,46 @@
             </div>
 
 
-            <div class="summary-grid">
+            <div
+                class="summary-grid"
+            >
 
                 <div class="summary-card">
-                    <span>TODAY REVENUE</span>
-                    <strong id="dashRevenue">P0.00</strong>
+
+                    <span>
+                        TODAY REVENUE
+                    </span>
+
+                    <strong id="dashRevenue">
+                        P0.00
+                    </strong>
+
                 </div>
 
-                <div class="summary-card">
-                    <span>TOTAL PROFIT</span>
-                    <strong id="dashProfit">P0.00</strong>
-                </div>
 
                 <div class="summary-card">
-                    <span>TOP SELLING</span>
-                    <strong id="dashTop">-</strong>
+
+                    <span>
+                        TOTAL PROFIT
+                    </span>
+
+                    <strong id="dashProfit">
+                        P0.00
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        TOP SELLING
+                    </span>
+
+                    <strong id="dashTop">
+                        -
+                    </strong>
+
                 </div>
 
             </div>
@@ -183,7 +504,7 @@
 
 
     <!-- ================================================= -->
-    <!-- POS CHECKOUT -->
+    <!-- 2. POS -->
     <!-- ================================================= -->
 
     <section
@@ -193,33 +514,44 @@
 
         <header>
 
-            <h1>DIAMOND STORE</h1>
+            <h1>
+                DIAMOND STORE
+            </h1>
+
 
             <button
                 type="button"
-                onclick="showPage('dashboardPage')"
+                onclick="showDashboard()"
             >
                 BACK
             </button>
 
         </header>
 
+
         <main>
 
-            <h2>POS CHECKOUT</h2>
+            <h2>
+                POS CHECKOUT
+            </h2>
 
-            <label for="posRice">
+
+            <label>
                 Rice Type
             </label>
 
-            <select id="posRice">
-                <option value="">Loading...</option>
+
+            <select
+                id="posRice"
+                onchange="updatePOSPrice()"
+            >
             </select>
 
 
-            <label for="posQuantity">
+            <label>
                 Quantity (kg)
             </label>
+
 
             <input
                 id="posQuantity"
@@ -230,13 +562,13 @@
             >
 
 
-            <label for="posPrice">
+            <label>
                 Price per kg
             </label>
 
+
             <input
                 id="posPrice"
-                type="text"
                 readonly
             >
 
@@ -249,19 +581,24 @@
             </button>
 
 
-            <h3>CART SUMMARY</h3>
+            <h3>
+                CART SUMMARY
+            </h3>
+
 
             <div
                 id="cartList"
                 class="cart-list"
             >
-                <p>Cart is empty.</p>
+                Cart is empty.
             </div>
 
 
             <div class="total-box">
 
-                <label>Total Amount</label>
+                <label>
+                    Total Amount
+                </label>
 
                 <strong id="cartTotal">
                     P0.00
@@ -270,9 +607,10 @@
             </div>
 
 
-            <label for="cashReceived">
+            <label>
                 Cash Handed
             </label>
+
 
             <input
                 id="cashReceived"
@@ -284,13 +622,13 @@
             >
 
 
-            <label for="changeAmount">
+            <label>
                 Change
             </label>
 
+
             <input
                 id="changeAmount"
-                type="text"
                 readonly
             >
 
@@ -303,7 +641,11 @@
                 COMPLETE SALE
             </button>
 
-            <p id="posMessage"></p>
+
+            <p
+                id="posMessage"
+                class="message"
+            ></p>
 
         </main>
 
@@ -311,7 +653,7 @@
 
 
     <!-- ================================================= -->
-    <!-- STOCK TRACKER -->
+    <!-- 3. STOCK -->
     <!-- ================================================= -->
 
     <section
@@ -321,45 +663,58 @@
 
         <header>
 
-            <h1>DIAMOND STORE</h1>
+            <h1>
+                DIAMOND STORE
+            </h1>
+
 
             <button
                 type="button"
-                onclick="showPage('dashboardPage')"
+                onclick="showDashboard()"
             >
                 BACK
             </button>
 
         </header>
 
+
         <main>
 
-            <h2>STOCK TRACKER</h2>
+            <h2>
+                STOCK TRACKER
+            </h2>
+
 
             <div id="inventoryList">
-                <p>Loading inventory...</p>
+                Loading inventory...
             </div>
 
 
             <div
                 id="adminStockEditor"
-                class="admin-only"
             >
 
-                <h3>ADMIN EDIT INVENTORY</h3>
+                <h3>
+                    ADMIN EDIT INVENTORY
+                </h3>
 
-                <label for="stockRice">
+
+                <label>
                     Rice Type
                 </label>
 
-                <select id="stockRice">
-                    <option value="">Select rice</option>
+
+                <select
+                    id="stockRice"
+                    onchange="loadStockFields()"
+                >
                 </select>
 
 
-                <label for="stockSacks">
+                <label>
                     Sacks
                 </label>
+
 
                 <input
                     id="stockSacks"
@@ -368,9 +723,10 @@
                 >
 
 
-                <label for="stockLoose">
+                <label>
                     Loose Kg
                 </label>
+
 
                 <input
                     id="stockLoose"
@@ -380,9 +736,10 @@
                 >
 
 
-                <label for="stockPrice">
+                <label>
                     New Price per kg
                 </label>
+
 
                 <input
                     id="stockPrice"
@@ -399,7 +756,11 @@
                     UPDATE STOCK
                 </button>
 
-                <p id="stockMessage"></p>
+
+                <p
+                    id="stockMessage"
+                    class="message"
+                ></p>
 
             </div>
 
@@ -409,7 +770,7 @@
 
 
     <!-- ================================================= -->
-    <!-- SHIFT SALES -->
+    <!-- 4. SHIFT -->
     <!-- ================================================= -->
 
     <section
@@ -419,25 +780,32 @@
 
         <header>
 
-            <h1>DIAMOND STORE</h1>
+            <h1>
+                DIAMOND STORE
+            </h1>
+
 
             <button
                 type="button"
-                onclick="showPage('dashboardPage')"
+                onclick="showDashboard()"
             >
                 BACK
             </button>
 
         </header>
 
+
         <main>
 
-            <h2>SHIFT SALES SUMMARY</h2>
+            <h2>
+                SHIFT SALES SUMMARY
+            </h2>
 
 
-            <label for="openingCash">
+            <label>
                 Opening Cash
             </label>
+
 
             <input
                 id="openingCash"
@@ -463,13 +831,14 @@
                 id="shiftInfo"
                 class="cart-list"
             >
-                <p>No active shift.</p>
+                No active shift.
             </div>
 
 
-            <label for="closingCash">
+            <label>
                 Closing Cash
             </label>
+
 
             <input
                 id="closingCash"
@@ -482,7 +851,7 @@
 
             <button
                 type="button"
-                onclick="closeCurrentShift()"
+                onclick="closeShiftNow()"
             >
                 CLOSE SHIFT
             </button>
@@ -493,7 +862,7 @@
 
 
     <!-- ================================================= -->
-    <!-- SUPPLIER & SHIPMENTS -->
+    <!-- 5. SUPPLIER -->
     <!-- ================================================= -->
 
     <section
@@ -503,56 +872,62 @@
 
         <header>
 
-            <h1>DIAMOND STORE</h1>
+            <h1>
+                DIAMOND STORE
+            </h1>
+
 
             <button
                 type="button"
-                onclick="showPage('dashboardPage')"
+                onclick="showDashboard()"
             >
                 BACK
             </button>
 
         </header>
 
+
         <main>
 
-            <h2>SUPPLIER & SHIPMENTS</h2>
+            <h2>
+                SUPPLIER & SHIPMENTS
+            </h2>
 
 
-            <label for="supplierName">
+            <label>
                 Supplier Name
             </label>
 
+
             <input
                 id="supplierName"
-                type="text"
                 placeholder="Golden Grain Trading"
             >
 
 
-            <label for="supplierContact">
+            <label>
                 Contact Number
             </label>
 
+
             <input
                 id="supplierContact"
-                type="text"
             >
 
 
-            <label for="supplierAddress">
+            <label>
                 Address
             </label>
 
+
             <input
                 id="supplierAddress"
-                type="text"
             >
 
 
             <button
                 type="button"
-                onclick="saveSupplier()"
+                onclick="addSupplier()"
             >
                 ADD SUPPLIER
             </button>
@@ -561,18 +936,21 @@
             <hr>
 
 
-            <label for="shipmentRice">
+            <label>
                 Rice Type
             </label>
 
-            <select id="shipmentRice">
-                <option value="">Select rice</option>
+
+            <select
+                id="shipmentRice"
+            >
             </select>
 
 
-            <label for="shipmentSacks">
+            <label>
                 Sacks Received
             </label>
+
 
             <input
                 id="shipmentSacks"
@@ -581,9 +959,10 @@
             >
 
 
-            <label for="shipmentCost">
+            <label>
                 Total Cost
             </label>
+
 
             <input
                 id="shipmentCost"
@@ -601,7 +980,10 @@
             </button>
 
 
-            <p id="supplierMessage"></p>
+            <p
+                id="supplierMessage"
+                class="message"
+            ></p>
 
         </main>
 
@@ -609,7 +991,7 @@
 
 
     <!-- ================================================= -->
-    <!-- SPOILAGE -->
+    <!-- 6. SPOILAGE -->
     <!-- ================================================= -->
 
     <section
@@ -619,34 +1001,43 @@
 
         <header>
 
-            <h1>DIAMOND STORE</h1>
+            <h1>
+                DIAMOND STORE
+            </h1>
+
 
             <button
                 type="button"
-                onclick="showPage('dashboardPage')"
+                onclick="showDashboard()"
             >
                 BACK
             </button>
 
         </header>
 
+
         <main>
 
-            <h2>SPOILAGE LOGGER</h2>
+            <h2>
+                SPOILAGE LOGGER
+            </h2>
 
 
-            <label for="spoilageRice">
+            <label>
                 Rice Type
             </label>
 
-            <select id="spoilageRice">
-                <option value="">Select rice</option>
+
+            <select
+                id="spoilageRice"
+            >
             </select>
 
 
-            <label for="damagedKg">
+            <label>
                 Damaged Weight (kg)
             </label>
+
 
             <input
                 id="damagedKg"
@@ -656,13 +1047,13 @@
             >
 
 
-            <label for="spoilageReason">
+            <label>
                 Reason
             </label>
 
+
             <input
                 id="spoilageReason"
-                type="text"
                 placeholder="Wet Grain"
             >
 
@@ -675,7 +1066,10 @@
             </button>
 
 
-            <p id="spoilageMessage"></p>
+            <p
+                id="spoilageMessage"
+                class="message"
+            ></p>
 
         </main>
 
@@ -683,7 +1077,7 @@
 
 
     <!-- ================================================= -->
-    <!-- SALES ANALYTICS -->
+    <!-- 7. ANALYTICS -->
     <!-- ================================================= -->
 
     <section
@@ -693,23 +1087,31 @@
 
         <header>
 
-            <h1>DIAMOND STORE</h1>
+            <h1>
+                DIAMOND STORE
+            </h1>
+
 
             <button
                 type="button"
-                onclick="showPage('dashboardPage')"
+                onclick="showDashboard()"
             >
                 BACK
             </button>
 
         </header>
 
+
         <main>
 
-            <h2>SALES ANALYTICS</h2>
+            <h2>
+                SALES ANALYTICS
+            </h2>
 
 
-            <div class="summary-grid">
+            <div
+                class="summary-grid"
+            >
 
                 <div class="summary-card">
 
@@ -717,7 +1119,9 @@
                         TOTAL DAILY REVENUE
                     </span>
 
-                    <strong id="analyticsRevenue">
+                    <strong
+                        id="analyticsRevenue"
+                    >
                         P0.00
                     </strong>
 
@@ -730,7 +1134,9 @@
                         TOTAL PROFIT
                     </span>
 
-                    <strong id="analyticsProfit">
+                    <strong
+                        id="analyticsProfit"
+                    >
                         P0.00
                     </strong>
 
@@ -743,7 +1149,9 @@
                         TOP SELLING RICE
                     </span>
 
-                    <strong id="analyticsTop">
+                    <strong
+                        id="analyticsTop"
+                    >
                         -
                     </strong>
 
@@ -761,7 +1169,7 @@
                 id="productAnalytics"
                 class="cart-list"
             >
-                <p>No sales data yet.</p>
+                No sales data yet.
             </div>
 
 
@@ -779,11 +1187,2381 @@
 </div>
 
 
-<!-- ================================================= -->
-<!-- ONLY ONE JAVASCRIPT FILE -->
-<!-- ================================================= -->
+<script>
 
-<script src="app.js"></script>
+/* ============================================================
+   IMPORTANT: YOUR APPS SCRIPT URL
+   ============================================================ */
+
+const API =
+"https://script.google.com/macros/s/AKfycbxUxWm5chmH59VOdnDL4WJgSR0xEKGtkhu8gBZ9VCLxp0-Mj8xbNi1ztGFBy-aYtYw/exec";
+
+
+let currentUser =
+    JSON.parse(
+        localStorage.getItem(
+            "diamondStoreUser"
+        ) || "null"
+    );
+
+
+let currentShiftId =
+    localStorage.getItem(
+        "diamondStoreShiftId"
+    ) || "";
+
+
+let inventory = [];
+
+let cart = [];
+
+
+/* ============================================================
+   API
+   ============================================================ */
+
+async function apiPost(
+    action,
+    data = {}
+) {
+
+    const response =
+        await fetch(
+            API,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "text/plain;charset=utf-8"
+                },
+
+                body: JSON.stringify({
+                    action: action,
+                    ...data
+                })
+            }
+        );
+
+
+    return await response.json();
+}
+
+
+async function apiGet(
+    action
+) {
+
+    const response =
+        await fetch(
+            API +
+            "?action=" +
+            encodeURIComponent(action)
+        );
+
+
+    return await response.json();
+}
+
+
+/* ============================================================
+   PAGE NAVIGATION
+   ============================================================ */
+
+function hidePages() {
+
+    document
+        .querySelectorAll(".page")
+        .forEach(
+            function(page) {
+
+                page.classList.add(
+                    "hidden"
+                );
+
+            }
+        );
+}
+
+
+function showPage(
+    id
+) {
+
+    hidePages();
+
+
+    const page =
+        document.getElementById(id);
+
+
+    if (page) {
+
+        page.classList.remove(
+            "hidden"
+        );
+
+        window.scrollTo(
+            0,
+            0
+        );
+    }
+}
+
+
+function showDashboard() {
+
+    showPage(
+        "dashboardPage"
+    );
+}
+
+
+function openPOS() {
+
+    showPage(
+        "posPage"
+    );
+
+
+    loadInventory();
+}
+
+
+function openStock() {
+
+    showPage(
+        "stockPage"
+    );
+
+
+    loadInventory();
+}
+
+
+function openShift() {
+
+    if (!isAdmin()) {
+
+        alert(
+            "Shift Sales is Admin only."
+        );
+
+        return;
+    }
+
+
+    showPage(
+        "shiftPage"
+    );
+
+
+    loadShiftSummary();
+}
+
+
+function openSuppliers() {
+
+    if (!isAdmin()) {
+
+        alert(
+            "Suppliers is Admin only."
+        );
+
+        return;
+    }
+
+
+    showPage(
+        "supplierPage"
+    );
+
+
+    loadInventory();
+}
+
+
+function openSpoilage() {
+
+    if (!isAdmin()) {
+
+        alert(
+            "Spoilage is Admin only."
+        );
+
+        return;
+    }
+
+
+    showPage(
+        "spoilagePage"
+    );
+
+
+    loadInventory();
+}
+
+
+function openAnalytics() {
+
+    if (!isAdmin()) {
+
+        alert(
+            "Sales Analytics is Admin only."
+        );
+
+        return;
+    }
+
+
+    showPage(
+        "analyticsPage"
+    );
+
+
+    loadAnalytics();
+}
+
+
+/* ============================================================
+   ROLE
+   ============================================================ */
+
+function isAdmin() {
+
+    return (
+        currentUser &&
+        String(
+            currentUser.role
+        ).toLowerCase()
+        ===
+        "admin"
+    );
+}
+
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+
+async function login() {
+
+    const username =
+        document
+            .getElementById(
+                "username"
+            )
+            .value
+            .trim();
+
+
+    const password =
+        document
+            .getElementById(
+                "password"
+            )
+            .value;
+
+
+    const role =
+        document
+            .getElementById(
+                "role"
+            )
+            .value;
+
+
+    const message =
+        document.getElementById(
+            "loginMessage"
+        );
+
+
+    if (
+        !username ||
+        !password
+    ) {
+
+        message.textContent =
+            "Please enter your User ID/Username and password.";
+
+        return;
+    }
+
+
+    message.textContent =
+        "Logging in...";
+
+
+    try {
+
+        const result =
+            await apiPost(
+                "login",
+                {
+                    username:
+                        username,
+
+                    password:
+                        password,
+
+                    role:
+                        role
+                }
+            );
+
+
+        if (
+            !result.success
+        ) {
+
+            message.textContent =
+                result.message;
+
+            return;
+        }
+
+
+        currentUser =
+            result.user;
+
+
+        localStorage.setItem(
+            "diamondStoreUser",
+            JSON.stringify(
+                currentUser
+            )
+        );
+
+
+        updateUserDisplay();
+
+        configureRole();
+
+        showDashboard();
+
+
+        await loadInventory();
+
+        await loadAnalytics();
+
+
+        message.textContent =
+            "";
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            "Unable to connect to Google Apps Script.";
+
+    }
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+function logout() {
+
+    currentUser =
+        null;
+
+
+    inventory =
+        [];
+
+
+    cart =
+        [];
+
+
+    currentShiftId =
+        "";
+
+
+    localStorage.removeItem(
+        "diamondStoreUser"
+    );
+
+
+    localStorage.removeItem(
+        "diamondStoreShiftId"
+    );
+
+
+    showPage(
+        "loginPage"
+    );
+}
+
+
+function updateUserDisplay() {
+
+    const display =
+        document.getElementById(
+            "userDisplay"
+        );
+
+
+    if (
+        display &&
+        currentUser
+    ) {
+
+        display.textContent =
+            currentUser.fullName +
+            " (" +
+            currentUser.role +
+            ")";
+    }
+}
+
+
+function configureRole() {
+
+    const admin =
+        isAdmin();
+
+
+    document.getElementById(
+        "shiftButton"
+    ).style.display =
+        admin
+            ? "block"
+            : "none";
+
+
+    document.getElementById(
+        "supplierButton"
+    ).style.display =
+        admin
+            ? "block"
+            : "none";
+
+
+    document.getElementById(
+        "spoilageButton"
+    ).style.display =
+        admin
+            ? "block"
+            : "none";
+
+
+    document.getElementById(
+        "analyticsButton"
+    ).style.display =
+        admin
+            ? "block"
+            : "none";
+
+
+    document.getElementById(
+        "adminStockEditor"
+    ).style.display =
+        admin
+            ? "block"
+            : "none";
+}
+
+
+/* ============================================================
+   MONEY
+   ============================================================ */
+
+function money(
+    value
+) {
+
+    return "P" +
+        Number(
+            value || 0
+        )
+        .toLocaleString(
+            "en-PH",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+}
+
+
+/* ============================================================
+   INVENTORY
+   ============================================================ */
+
+async function loadInventory() {
+
+    try {
+
+        const result =
+            await apiGet(
+                "inventory"
+            );
+
+
+        if (
+            !result.success
+        ) {
+
+            console.error(
+                result.message
+            );
+
+            return;
+        }
+
+
+        inventory =
+            result.inventory || [];
+
+
+        renderInventory();
+
+        populateRiceSelects();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+}
+
+
+function renderInventory() {
+
+    const container =
+        document.getElementById(
+            "inventoryList"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    if (
+        inventory.length === 0
+    ) {
+
+        container.innerHTML =
+            "<p>No inventory data.</p>";
+
+        return;
+    }
+
+
+    container.innerHTML =
+        inventory
+            .map(
+                function(item) {
+
+                    return `
+
+                        <div class="inventory-card
+                            ${
+                                item.lowStock
+                                    ? "low-stock"
+                                    : ""
+                            }">
+
+                            <h3>
+                                ${escapeHtml(
+                                    item.riceType
+                                )}
+                            </h3>
+
+                            <div
+                                class="inventory-details"
+                            >
+
+                                <div>
+                                    <strong>
+                                        Stock
+                                    </strong>
+
+                                    <br>
+
+                                    ${
+                                        item.quantitySacks
+                                    }
+                                    sacks
+                                </div>
+
+                                <div>
+                                    <strong>
+                                        Loose
+                                    </strong>
+
+                                    <br>
+
+                                    ${
+                                        item.looseKg
+                                    }
+                                    kg
+                                </div>
+
+                                <div>
+                                    <strong>
+                                        Total
+                                    </strong>
+
+                                    <br>
+
+                                    ${
+                                        item.totalKg
+                                    }
+                                    kg
+                                </div>
+
+                            </div>
+
+                            <p>
+                                Price:
+                                ${money(
+                                    item.pricePerKg
+                                )}
+                                / kg
+                            </p>
+
+                            <p>
+                                ${
+                                    item.lowStock
+                                        ? "LOW STOCK"
+                                        : "Available"
+                                }
+                            </p>
+
+                        </div>
+
+                    `;
+                }
+            )
+            .join("");
+}
+
+
+function populateRiceSelects() {
+
+    const ids = [
+
+        "posRice",
+
+        "stockRice",
+
+        "shipmentRice",
+
+        "spoilageRice"
+
+    ];
+
+
+    ids.forEach(
+        function(id) {
+
+            const select =
+                document.getElementById(
+                    id
+                );
+
+
+            if (!select) {
+                return;
+            }
+
+
+            const old =
+                select.value;
+
+
+            select.innerHTML =
+                '<option value="">Select rice</option>';
+
+
+            inventory.forEach(
+                function(item) {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    option.value =
+                        item.inventoryId;
+
+
+                    option.textContent =
+                        item.riceType;
+
+
+                    select.appendChild(
+                        option
+                    );
+                }
+            );
+
+
+            if (
+                old &&
+                inventory.some(
+                    x =>
+                        String(
+                            x.inventoryId
+                        ) ===
+                        String(old)
+                )
+            ) {
+
+                select.value =
+                    old;
+            }
+        }
+    );
+
+
+    updatePOSPrice();
+
+    loadStockFields();
+}
+
+
+function findInventory(
+    id
+) {
+
+    return inventory.find(
+        function(item) {
+
+            return String(
+                item.inventoryId
+            ) ===
+            String(id);
+        }
+    );
+}
+
+
+/* ============================================================
+   POS
+   ============================================================ */
+
+function updatePOSPrice() {
+
+    const select =
+        document.getElementById(
+            "posRice"
+        );
+
+
+    const price =
+        document.getElementById(
+            "posPrice"
+        );
+
+
+    if (
+        !select ||
+        !price
+    ) {
+        return;
+    }
+
+
+    const item =
+        findInventory(
+            select.value
+        );
+
+
+    price.value =
+        item
+            ? money(
+                item.pricePerKg
+            )
+            : "";
+}
+
+
+function addToCart() {
+
+    const id =
+        document
+            .getElementById(
+                "posRice"
+            )
+            .value;
+
+
+    const quantity =
+        Number(
+            document
+                .getElementById(
+                    "posQuantity"
+                )
+                .value
+        );
+
+
+    const item =
+        findInventory(id);
+
+
+    if (!item) {
+
+        alert(
+            "Select a rice type."
+        );
+
+        return;
+    }
+
+
+    if (
+        !quantity ||
+        quantity <= 0
+    ) {
+
+        alert(
+            "Enter a valid quantity."
+        );
+
+        return;
+    }
+
+
+    const existing =
+        cart.find(
+            function(x) {
+
+                return String(
+                    x.inventoryId
+                ) ===
+                String(id);
+            }
+        );
+
+
+    const existingQty =
+        existing
+            ? existing.quantityKg
+            : 0;
+
+
+    if (
+        existingQty +
+        quantity >
+        item.totalKg
+    ) {
+
+        alert(
+            "Not enough stock."
+        );
+
+        return;
+    }
+
+
+    if (existing) {
+
+        existing.quantityKg +=
+            quantity;
+
+
+        existing.subtotal =
+            existing.quantityKg *
+            existing.pricePerKg;
+
+    } else {
+
+        cart.push({
+
+            inventoryId:
+                item.inventoryId,
+
+            riceType:
+                item.riceType,
+
+            quantityKg:
+                quantity,
+
+            pricePerKg:
+                Number(
+                    item.pricePerKg
+                ),
+
+            costPerKg:
+                Number(
+                    item.costPerKg
+                ),
+
+            subtotal:
+                quantity *
+                Number(
+                    item.pricePerKg
+                )
+        });
+    }
+
+
+    renderCart();
+}
+
+
+function renderCart() {
+
+    const container =
+        document.getElementById(
+            "cartList"
+        );
+
+
+    const totalElement =
+        document.getElementById(
+            "cartTotal"
+        );
+
+
+    if (
+        !cart.length
+    ) {
+
+        container.innerHTML =
+            "<p>Cart is empty.</p>";
+
+    } else {
+
+        container.innerHTML =
+            cart
+                .map(
+                    function(item, index) {
+
+                        return `
+
+                            <div
+                                class="cart-item"
+                            >
+
+                                <span>
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            item.riceType
+                                        )}
+                                    </strong>
+
+                                    <br>
+
+                                    ${
+                                        item.quantityKg
+                                    }
+                                    kg @
+                                    ${money(
+                                        item.pricePerKg
+                                    )}
+                                    /kg
+
+                                </span>
+
+                                <span>
+
+                                    <strong>
+                                        ${money(
+                                            item.subtotal
+                                        )}
+                                    </strong>
+
+                                    <br>
+
+                                    <button
+                                        type="button"
+                                        onclick="removeCart(${index})"
+                                    >
+                                        REMOVE
+                                    </button>
+
+                                </span>
+
+                            </div>
+                        `;
+                    }
+                )
+                .join("");
+    }
+
+
+    totalElement.textContent =
+        money(
+            getTotal()
+        );
+
+
+    calculateChange();
+}
+
+
+function removeCart(
+    index
+) {
+
+    cart.splice(
+        index,
+        1
+    );
+
+
+    renderCart();
+}
+
+
+function getTotal() {
+
+    return cart.reduce(
+        function(sum, item) {
+
+            return sum +
+                Number(
+                    item.subtotal
+                );
+
+        },
+        0
+    );
+}
+
+
+function calculateChange() {
+
+    const cash =
+        Number(
+            document
+                .getElementById(
+                    "cashReceived"
+                )
+                .value
+        ) || 0;
+
+
+    const change =
+        cash -
+        getTotal();
+
+
+    document
+        .getElementById(
+            "changeAmount"
+        )
+        .value =
+        change >= 0
+            ? money(change)
+            : "Insufficient cash";
+}
+
+
+async function completeSale() {
+
+    if (
+        !currentUser
+    ) {
+
+        alert(
+            "Please login first."
+        );
+
+        return;
+    }
+
+
+    if (
+        !cart.length
+    ) {
+
+        alert(
+            "Cart is empty."
+        );
+
+        return;
+    }
+
+
+    const cash =
+        Number(
+            document
+                .getElementById(
+                    "cashReceived"
+                )
+                .value
+        );
+
+
+    if (
+        !cash ||
+        cash < getTotal()
+    ) {
+
+        alert(
+            "Insufficient cash."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await apiPost(
+                "createSale",
+                {
+
+                    cashier: {
+
+                        userId:
+                            currentUser.userId,
+
+                        fullName:
+                            currentUser.fullName,
+
+                        role:
+                            currentUser.role
+                    },
+
+                    items:
+                        cart,
+
+                    cashReceived:
+                        cash
+                }
+            );
+
+
+        if (
+            !result.success
+        ) {
+
+            alert(
+                result.message
+            );
+
+            return;
+        }
+
+
+        alert(
+
+            "SALE COMPLETED\n\n" +
+
+            "Transaction: " +
+            result.sale.transactionNumber +
+
+            "\nTotal: " +
+            money(
+                result.sale.totalAmount
+            ) +
+
+            "\nCash: " +
+            money(
+                result.sale.cashReceived
+            ) +
+
+            "\nChange: " +
+            money(
+                result.sale.changeAmount
+            )
+        );
+
+
+        cart = [];
+
+
+        document
+            .getElementById(
+                "cashReceived"
+            )
+            .value = "0";
+
+
+        renderCart();
+
+
+        await loadInventory();
+
+        await loadAnalytics();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to complete sale."
+        );
+    }
+}
+
+
+/* ============================================================
+   STOCK
+   ============================================================ */
+
+function loadStockFields() {
+
+    const id =
+        document
+            .getElementById(
+                "stockRice"
+            )?.value;
+
+
+    const item =
+        findInventory(id);
+
+
+    if (!item) {
+        return;
+    }
+
+
+    document
+        .getElementById(
+            "stockSacks"
+        )
+        .value =
+        item.quantitySacks;
+
+
+    document
+        .getElementById(
+            "stockLoose"
+        )
+        .value =
+        item.looseKg;
+
+
+    document
+        .getElementById(
+            "stockPrice"
+        )
+        .value =
+        item.pricePerKg;
+}
+
+
+async function updateStock() {
+
+    if (
+        !isAdmin()
+    ) {
+
+        alert(
+            "Only Admin can update stock."
+        );
+
+        return;
+    }
+
+
+    const id =
+        document
+            .getElementById(
+                "stockRice"
+            )
+            .value;
+
+
+    const item =
+        findInventory(id);
+
+
+    if (!item) {
+
+        alert(
+            "Select rice type."
+        );
+
+        return;
+    }
+
+
+    const sacks =
+        Number(
+            document
+                .getElementById(
+                    "stockSacks"
+                )
+                .value
+        );
+
+
+    const loose =
+        Number(
+            document
+                .getElementById(
+                    "stockLoose"
+                )
+                .value
+        );
+
+
+    const price =
+        Number(
+            document
+                .getElementById(
+                    "stockPrice"
+                )
+                .value
+        );
+
+
+    const result =
+        await apiPost(
+            "updateInventory",
+            {
+
+                inventoryId:
+                    id,
+
+                riceType:
+                    item.riceType,
+
+                quantitySacks:
+                    sacks,
+
+                looseKg:
+                    loose,
+
+                pricePerKg:
+                    price,
+
+                role:
+                    currentUser.role,
+
+                userId:
+                    currentUser.userId,
+
+                userName:
+                    currentUser.fullName
+            }
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        alert(
+            result.message
+        );
+
+        return;
+    }
+
+
+    alert(
+        "Inventory updated."
+    );
+
+
+    await loadInventory();
+}
+
+
+/* ============================================================
+   SHIFT
+   ============================================================ */
+
+async function startShift() {
+
+    if (
+        !currentUser
+    ) {
+
+        return;
+    }
+
+
+    const openingCash =
+        Number(
+            document
+                .getElementById(
+                    "openingCash"
+                )
+                .value
+        ) || 0;
+
+
+    const result =
+        await apiPost(
+            "startShift",
+            {
+
+                cashierId:
+                    currentUser.userId,
+
+                cashierName:
+                    currentUser.fullName,
+
+                openingCash:
+                    openingCash
+            }
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        alert(
+            result.message
+        );
+
+        return;
+    }
+
+
+    currentShiftId =
+        result.shiftId;
+
+
+    localStorage.setItem(
+        "diamondStoreShiftId",
+        currentShiftId
+    );
+
+
+    alert(
+        "Shift started."
+    );
+
+
+    await loadShiftSummary();
+}
+
+
+async function loadShiftSummary() {
+
+    const container =
+        document.getElementById(
+            "shiftInfo"
+        );
+
+
+    const result =
+        await apiPost(
+            "shiftSummary",
+            {
+
+                shiftId:
+                    currentShiftId || ""
+            }
+        );
+
+
+    if (
+        !result.success ||
+        !result.shift
+    ) {
+
+        container.innerHTML =
+            "<p>No active shift.</p>";
+
+        return;
+    }
+
+
+    const shift =
+        result.shift;
+
+
+    const transactions =
+        result.transactions || [];
+
+
+    container.innerHTML = `
+
+        <div class="summary-card">
+
+            <strong>
+                Cashier Name
+            </strong>
+
+            <p>
+                ${escapeHtml(
+                    shift.cashierName || ""
+                )}
+            </p>
+
+            <strong>
+                Cash Drawer Total
+            </strong>
+
+            <p>
+                ${money(
+                    shift.totalSales
+                )}
+            </p>
+
+            <p>
+                Opening Cash:
+                ${money(
+                    shift.openingCash
+                )}
+            </p>
+
+            <p>
+                Status:
+                ${escapeHtml(
+                    shift.status || ""
+                )}
+            </p>
+
+        </div>
+
+        <h3>
+            SHIFT TRANSACTIONS
+        </h3>
+
+        ${
+            transactions.length
+
+            ? transactions
+                .map(
+                    function(t) {
+
+                        return `
+
+                            <div
+                                class="cart-item"
+                            >
+
+                                <span>
+                                    ${escapeHtml(
+                                        t.transactionNumber
+                                    )}
+                                </span>
+
+                                <strong>
+                                    ${money(
+                                        t.totalAmount
+                                    )}
+                                </strong>
+
+                            </div>
+                        `;
+                    }
+                )
+                .join("")
+
+            : "<p>No transactions yet.</p>"
+        }
+    `;
+}
+
+
+async function closeShiftNow() {
+
+    if (
+        !currentShiftId
+    ) {
+
+        alert(
+            "No active shift."
+        );
+
+        return;
+    }
+
+
+    const closingCash =
+        Number(
+            document
+                .getElementById(
+                    "closingCash"
+                )
+                .value
+        ) || 0;
+
+
+    const result =
+        await apiPost(
+            "closeShift",
+            {
+
+                shiftId:
+                    currentShiftId,
+
+                closingCash:
+                    closingCash
+            }
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        alert(
+            result.message
+        );
+
+        return;
+    }
+
+
+    alert(
+        "Shift closed.\nTotal Sales: " +
+        money(
+            result.totalSales
+        )
+    );
+
+
+    currentShiftId =
+        "";
+
+
+    localStorage.removeItem(
+        "diamondStoreShiftId"
+    );
+
+
+    await loadShiftSummary();
+}
+
+
+/* ============================================================
+   SUPPLIER
+   ============================================================ */
+
+async function addSupplier() {
+
+    if (
+        !isAdmin()
+    ) {
+
+        alert(
+            "Admin only."
+        );
+
+        return;
+    }
+
+
+    const supplierName =
+        document
+            .getElementById(
+                "supplierName"
+            )
+            .value
+            .trim();
+
+
+    const contact =
+        document
+            .getElementById(
+                "supplierContact"
+            )
+            .value
+            .trim();
+
+
+    const address =
+        document
+            .getElementById(
+                "supplierAddress"
+            )
+            .value
+            .trim();
+
+
+    if (
+        !supplierName
+    ) {
+
+        alert(
+            "Supplier name is required."
+        );
+
+        return;
+    }
+
+
+    const result =
+        await apiPost(
+            "addSupplier",
+            {
+
+                supplierName:
+                    supplierName,
+
+                contactNumber:
+                    contact,
+
+                address:
+                    address,
+
+                role:
+                    currentUser.role,
+
+                userId:
+                    currentUser.userId,
+
+                userName:
+                    currentUser.fullName
+            }
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        alert(
+            result.message
+        );
+
+        return;
+    }
+
+
+    alert(
+        "Supplier saved."
+    );
+
+
+    document
+        .getElementById(
+            "supplierName"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "supplierContact"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "supplierAddress"
+        )
+        .value = "";
+}
+
+
+async function saveShipment() {
+
+    if (
+        !isAdmin()
+    ) {
+
+        alert(
+            "Admin only."
+        );
+
+        return;
+    }
+
+
+    const supplier =
+        document
+            .getElementById(
+                "supplierName"
+            )
+            .value
+            .trim();
+
+
+    const riceId =
+        document
+            .getElementById(
+                "shipmentRice"
+            )
+            .value;
+
+
+    const rice =
+        findInventory(
+            riceId
+        );
+
+
+    const sacks =
+        Number(
+            document
+                .getElementById(
+                    "shipmentSacks"
+                )
+                .value
+        );
+
+
+    const cost =
+        Number(
+            document
+                .getElementById(
+                    "shipmentCost"
+                )
+                .value
+        );
+
+
+    if (
+        !supplier ||
+        !rice ||
+        sacks <= 0
+    ) {
+
+        alert(
+            "Complete the shipment fields."
+        );
+
+        return;
+    }
+
+
+    const result =
+        await apiPost(
+            "saveShipment",
+            {
+
+                supplierId:
+                    "",
+
+                supplierName:
+                    supplier,
+
+                riceType:
+                    rice.riceType,
+
+                sacksReceived:
+                    sacks,
+
+                totalCost:
+                    cost,
+
+                role:
+                    currentUser.role,
+
+                userId:
+                    currentUser.userId,
+
+                userName:
+                    currentUser.fullName
+            }
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        alert(
+            result.message
+        );
+
+        return;
+    }
+
+
+    alert(
+        "Shipment saved and stock updated."
+    );
+
+
+    await loadInventory();
+}
+
+
+/* ============================================================
+   SPOILAGE
+   ============================================================ */
+
+async function recordSpoilage() {
+
+    if (
+        !isAdmin()
+    ) {
+
+        alert(
+            "Admin only."
+        );
+
+        return;
+    }
+
+
+    const id =
+        document
+            .getElementById(
+                "spoilageRice"
+            )
+            .value;
+
+
+    const item =
+        findInventory(id);
+
+
+    const damaged =
+        Number(
+            document
+                .getElementById(
+                    "damagedKg"
+                )
+                .value
+        );
+
+
+    const reason =
+        document
+            .getElementById(
+                "spoilageReason"
+            )
+            .value
+            .trim();
+
+
+    if (
+        !item ||
+        damaged <= 0 ||
+        !reason
+    ) {
+
+        alert(
+            "Complete all spoilage fields."
+        );
+
+        return;
+    }
+
+
+    const result =
+        await apiPost(
+            "recordSpoilage",
+            {
+
+                inventoryId:
+                    item.inventoryId,
+
+                riceType:
+                    item.riceType,
+
+                damagedKg:
+                    damaged,
+
+                reason:
+                    reason,
+
+                role:
+                    currentUser.role,
+
+                userId:
+                    currentUser.userId,
+
+                userName:
+                    currentUser.fullName
+            }
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        alert(
+            result.message
+        );
+
+        return;
+    }
+
+
+    alert(
+
+        "Spoilage recorded.\n" +
+
+        "Estimated Loss: " +
+
+        money(
+            result.estimatedLoss
+        )
+    );
+
+
+    document
+        .getElementById(
+            "damagedKg"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "spoilageReason"
+        )
+        .value = "";
+
+
+    await loadInventory();
+}
+
+
+/* ============================================================
+   ANALYTICS
+   ============================================================ */
+
+async function loadAnalytics() {
+
+    const result =
+        await apiGet(
+            "analytics"
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        return;
+    }
+
+
+    const data =
+        result.analytics;
+
+
+    document
+        .getElementById(
+            "dashRevenue"
+        )
+        .textContent =
+        money(
+            data.dailyRevenue
+        );
+
+
+    document
+        .getElementById(
+            "dashProfit"
+        )
+        .textContent =
+        money(
+            data.totalProfit
+        );
+
+
+    document
+        .getElementById(
+            "dashTop"
+        )
+        .textContent =
+        data.topSelling ||
+        "-";
+
+
+    document
+        .getElementById(
+            "analyticsRevenue"
+        )
+        .textContent =
+        money(
+            data.dailyRevenue
+        );
+
+
+    document
+        .getElementById(
+            "analyticsProfit"
+        )
+        .textContent =
+        money(
+            data.totalProfit
+        );
+
+
+    document
+        .getElementById(
+            "analyticsTop"
+        )
+        .textContent =
+        data.topSelling ||
+        "-";
+
+
+    renderProductAnalytics(
+        data.products || []
+    );
+}
+
+
+function renderProductAnalytics(
+    products
+) {
+
+    const container =
+        document.getElementById(
+            "productAnalytics"
+        );
+
+
+    if (
+        !products.length
+    ) {
+
+        container.innerHTML =
+            "<p>No sales data yet.</p>";
+
+        return;
+    }
+
+
+    container.innerHTML =
+        products
+            .map(
+                function(item) {
+
+                    return `
+
+                        <div
+                            class="summary-card"
+                        >
+
+                            <strong>
+                                ${escapeHtml(
+                                    item.riceType
+                                )}
+                            </strong>
+
+                            <p>
+                                Quantity Sold:
+                                ${
+                                    item.quantityKg
+                                }
+                                kg
+                            </p>
+
+                            <p>
+                                Revenue:
+                                ${money(
+                                    item.revenue
+                                )}
+                            </p>
+
+                            <p>
+                                Profit:
+                                ${money(
+                                    item.profit
+                                )}
+                            </p>
+
+                        </div>
+                    `;
+                }
+            )
+            .join("");
+}
+
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+
+async function exportReport() {
+
+    const result =
+        await apiGet(
+            "report"
+        );
+
+
+    if (
+        !result.success
+    ) {
+
+        alert(
+            result.message
+        );
+
+        return;
+    }
+
+
+    const rows =
+        result.rows || [];
+
+
+    if (
+        !rows.length
+    ) {
+
+        alert(
+            "No sales records."
+        );
+
+        return;
+    }
+
+
+    const headers =
+        Object.keys(
+            rows[0]
+        );
+
+
+    let csv =
+        headers.join(",") +
+        "\n";
+
+
+    rows.forEach(
+        function(row) {
+
+            csv +=
+                headers
+                    .map(
+                        function(header) {
+
+                            return (
+                                '"' +
+                                String(
+                                    row[header] ?? ""
+                                )
+                                .replace(
+                                    /"/g,
+                                    '""'
+                                ) +
+                                '"'
+                            );
+                        }
+                    )
+                    .join(",") +
+                "\n";
+        }
+    );
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+    a.href =
+        url;
+
+
+    a.download =
+        "Diamond-Store-Sales-Report.csv";
+
+
+    document.body.appendChild(
+        a
+    );
+
+
+    a.click();
+
+    a.remove();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+}
+
+
+/* ============================================================
+   HTML ESCAPE
+   ============================================================ */
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+}
+
+
+/* ============================================================
+   START APPLICATION
+   ============================================================ */
+
+window.addEventListener(
+    "load",
+    async function() {
+
+        if (
+            currentUser
+        ) {
+
+            updateUserDisplay();
+
+            configureRole();
+
+            showDashboard();
+
+            await loadInventory();
+
+            await loadAnalytics();
+
+        } else {
+
+            showPage(
+                "loginPage"
+            );
+        }
+
+    }
+);
+
+</script>
+
 
 </body>
 </html>
