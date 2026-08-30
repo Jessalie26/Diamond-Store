@@ -1,5 +1,5 @@
 {
   "name": "diamond-store",
   "version": "1.0.0",
-  "type": "module"
+  "description": "Diamond Store POS and Inventory System - web frontend on Vercel, backend via Google Apps Script"
 }
