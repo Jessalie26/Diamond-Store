@@ -10,7 +10,7 @@
 // ============================================================
 
 const API =
-    "https://script.google.com/macros/s/AKfycbxt7gvro_J4zyqp-L5mXiF--TE90TpbVVrYRl5QtyNC6XlE2Mmp_Albo2nJqO0ssuXvAg/exec";
+    "https://script.google.com/macros/s/AKfycbzTa6B_qlrZOjZYsbNyDBiH5IiyRXZhHQ_z41RL4KEfTzHbiOAgaFwYOAq5QlbT-Y4AcQ/exec";
 
 
 // ============================================================
