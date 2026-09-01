@@ -42,6 +42,9 @@ function doGet(e) {
         return response({ success: true, suppliers: getSuppliers() });
       case "report":
         return response({ success: true, rows: getSalesReport() });
+      // ── CRUD: READ lists ──────────────────────────────
+      case "users":
+        return response({ success: true, users: getUserList({ role: "admin" }).users || [] });
       default:
         return response({ success: false, message: "Unknown action." });
     }
@@ -69,6 +72,14 @@ function doPost(e) {
       case "addSupplier":    return response(addSupplier(data));
       case "saveShipment":   return response(saveShipment(data));
       case "recordSpoilage": return response(recordSpoilage(data));
+      // ── CRUD: DELETE / UPDATE ──────────────────────────
+      case "deleteInventory":  return response(deleteInventory(data));
+      case "updateSupplier":   return response(updateSupplier(data));
+      case "deleteSupplier":   return response(deleteSupplier(data));
+      case "getUsers":         return response(getUserList(data));
+      case "addUser":          return response(addUser(data));
+      case "updateUser":       return response(updateUser(data));
+      case "deleteUser":       return response(deleteUser(data));
       default:
         return response({ success: false, message: "Unknown action: " + action });
     }
@@ -860,4 +871,261 @@ function writeLog(userId, userName, role, action, details) {
     // Logging must never break a transaction
     console.error(error);
   }
+}
+
+// ============================================================
+// CRUD — DELETE INVENTORY  (soft delete: Status = "Inactive")
+// Admin only
+// ============================================================
+function deleteInventory(data) {
+  if (String(data.role || "").toLowerCase() !== "admin") {
+    return { success: false, message: "Only Admin can delete inventory." };
+  }
+  if (!data.inventoryId) {
+    return { success: false, message: "inventoryId is required." };
+  }
+
+  const sheet  = getSheet(STORE.INVENTORY);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(data.inventoryId)) {
+      sheet.getRange(i + 1, 8).setValue("Inactive");   // col H = Status
+      sheet.getRange(i + 1, 9).setValue(new Date());   // col I = UpdatedAt
+      writeLog(data.userId || "", data.userName || "", data.role || "",
+               "DELETE INVENTORY", String(values[i][1]));
+      return { success: true, message: values[i][1] + " removed from inventory." };
+    }
+  }
+  return { success: false, message: "Inventory item not found." };
+}
+
+// ============================================================
+// CRUD — UPDATE SUPPLIER  (Admin only)
+// ============================================================
+function updateSupplier(data) {
+  if (String(data.role || "").toLowerCase() !== "admin") {
+    return { success: false, message: "Only Admin can update suppliers." };
+  }
+  if (!data.supplierId) {
+    return { success: false, message: "supplierId is required." };
+  }
+
+  const sheet  = getSheet(STORE.SUPPLIERS);
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0].map(normalize);
+
+  const idIdx      = headers.indexOf("supplierid");
+  const nameIdx    = headers.indexOf("suppliername");
+  const contactIdx = headers.indexOf("contactnumber");
+  const addrIdx    = headers.indexOf("address");
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][idIdx]).toLowerCase() === String(data.supplierId).toLowerCase()) {
+      if (nameIdx    >= 0 && data.supplierName    !== undefined)
+        sheet.getRange(i + 1, nameIdx    + 1).setValue(data.supplierName);
+      if (contactIdx >= 0 && data.contactNumber   !== undefined)
+        sheet.getRange(i + 1, contactIdx + 1).setValue(data.contactNumber);
+      if (addrIdx    >= 0 && data.address         !== undefined)
+        sheet.getRange(i + 1, addrIdx    + 1).setValue(data.address);
+
+      writeLog(data.userId || "", data.userName || "", data.role || "",
+               "UPDATE SUPPLIER", String(data.supplierId));
+      return { success: true, message: "Supplier updated successfully." };
+    }
+  }
+  return { success: false, message: "Supplier not found." };
+}
+
+// ============================================================
+// CRUD — DELETE SUPPLIER  (soft delete: Status = "Inactive")
+// Admin only
+// ============================================================
+function deleteSupplier(data) {
+  if (String(data.role || "").toLowerCase() !== "admin") {
+    return { success: false, message: "Only Admin can delete suppliers." };
+  }
+  if (!data.supplierId) {
+    return { success: false, message: "supplierId is required." };
+  }
+
+  const sheet   = getSheet(STORE.SUPPLIERS);
+  const values  = sheet.getDataRange().getValues();
+  const headers = values[0].map(normalize);
+
+  const idIdx     = headers.indexOf("supplierid");
+  const statusIdx = headers.indexOf("status");
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][idIdx]).toLowerCase() === String(data.supplierId).toLowerCase()) {
+      if (statusIdx >= 0) sheet.getRange(i + 1, statusIdx + 1).setValue("Inactive");
+      writeLog(data.userId || "", data.userName || "", data.role || "",
+               "DELETE SUPPLIER", String(data.supplierId));
+      return { success: true, message: "Supplier deactivated." };
+    }
+  }
+  return { success: false, message: "Supplier not found." };
+}
+
+// ============================================================
+// CRUD — GET USER LIST  (Admin only — never exposes passwords)
+// ============================================================
+function getUserList(data) {
+  if (String(data.role || "").toLowerCase() !== "admin") {
+    return { success: false, message: "Only Admin can view users." };
+  }
+
+  const sheet  = getSheet(STORE.USERS);
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return { success: true, users: [] };
+
+  const headers       = values[0].map(function(h) { return String(h).trim(); });
+  const idIndex       = findColumn(headers, ["UserID","ID","UserId"]);
+  const usernameIndex = findColumn(headers, ["Username","UserName"]);
+  const nameIndex     = findColumn(headers, ["FullName","Name"]);
+  const roleIndex     = findColumn(headers, ["Role"]);
+  const statusIndex   = findColumn(headers, ["Status","AccountStatus"]);
+
+  const users = values.slice(1)
+    .filter(function(row) { return String(row[idIndex] || "").trim() !== ""; })
+    .map(function(row) {
+      return {
+        userId:   String(row[idIndex]       || ""),
+        username: String(row[usernameIndex] || ""),
+        fullName: String(row[nameIndex]     || ""),
+        role:     String(row[roleIndex]     || ""),
+        status:   String(row[statusIndex]   || "Active")
+      };
+    });
+
+  return { success: true, users: users };
+}
+
+// ============================================================
+// CRUD — ADD USER  (Admin only)
+// ============================================================
+function addUser(data) {
+  if (String(data.role || "").toLowerCase() !== "admin") {
+    return { success: false, message: "Only Admin can add users." };
+  }
+
+  const username = String(data.newUsername || "").trim();
+  const password = String(data.newPassword || "").trim();
+  const fullName = String(data.fullName    || "").trim();
+  const newRole  = String(data.newRole     || "Cashier").trim();
+
+  if (!username || !password || !fullName) {
+    return { success: false, message: "Username, password, and full name are required." };
+  }
+
+  const sheet  = getSheet(STORE.USERS);
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0].map(function(h) { return String(h).trim(); });
+  const usernameIndex = findColumn(headers, ["Username","UserName"]);
+
+  // Check duplicate username
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][usernameIndex] || "").toLowerCase() === username.toLowerCase()) {
+      return { success: false, message: "Username already exists." };
+    }
+  }
+
+  const userId       = generateId("USR");
+  const passwordHash = hashPassword(password);
+
+  // Write using existing column headers
+  const idIdx     = findColumn(headers, ["UserID","ID","UserId"]);
+  const nameIdx   = findColumn(headers, ["FullName","Name"]);
+  const passIdx   = findColumn(headers, ["PasswordHash","Password"]);
+  const roleIdx   = findColumn(headers, ["Role"]);
+  const statusIdx = findColumn(headers, ["Status","AccountStatus"]);
+
+  const row = new Array(headers.length).fill("");
+  if (idIdx     >= 0) row[idIdx]     = userId;
+  if (usernameIndex >= 0) row[usernameIndex] = username;
+  if (passIdx   >= 0) row[passIdx]   = passwordHash;
+  if (nameIdx   >= 0) row[nameIdx]   = fullName;
+  if (roleIdx   >= 0) row[roleIdx]   = newRole;
+  if (statusIdx >= 0) row[statusIdx] = "Active";
+
+  sheet.appendRow(row);
+  writeLog(data.userId || "", data.userName || "", data.role || "",
+           "ADD USER", username + " (" + newRole + ")");
+
+  return { success: true, message: "User " + username + " created.", userId: userId };
+}
+
+// ============================================================
+// CRUD — UPDATE USER  (Admin only — can change name/role/status/password)
+// ============================================================
+function updateUser(data) {
+  if (String(data.role || "").toLowerCase() !== "admin") {
+    return { success: false, message: "Only Admin can update users." };
+  }
+  if (!data.targetUserId) {
+    return { success: false, message: "targetUserId is required." };
+  }
+
+  const sheet  = getSheet(STORE.USERS);
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0].map(function(h) { return String(h).trim(); });
+
+  const idIdx     = findColumn(headers, ["UserID","ID","UserId"]);
+  const nameIdx   = findColumn(headers, ["FullName","Name"]);
+  const passIdx   = findColumn(headers, ["PasswordHash","Password"]);
+  const roleIdx   = findColumn(headers, ["Role"]);
+  const statusIdx = findColumn(headers, ["Status","AccountStatus"]);
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][idIdx]).toLowerCase() === String(data.targetUserId).toLowerCase()) {
+      if (nameIdx   >= 0 && data.fullName  !== undefined)
+        sheet.getRange(i + 1, nameIdx   + 1).setValue(data.fullName);
+      if (roleIdx   >= 0 && data.newRole   !== undefined)
+        sheet.getRange(i + 1, roleIdx   + 1).setValue(data.newRole);
+      if (statusIdx >= 0 && data.newStatus !== undefined)
+        sheet.getRange(i + 1, statusIdx + 1).setValue(data.newStatus);
+      if (passIdx   >= 0 && data.newPassword && data.newPassword.trim() !== "")
+        sheet.getRange(i + 1, passIdx   + 1).setValue(hashPassword(data.newPassword));
+
+      writeLog(data.userId || "", data.userName || "", data.role || "",
+               "UPDATE USER", String(data.targetUserId));
+      return { success: true, message: "User updated successfully." };
+    }
+  }
+  return { success: false, message: "User not found." };
+}
+
+// ============================================================
+// CRUD — DELETE USER  (soft delete: Status = "Inactive")
+// Admin only — cannot delete own account
+// ============================================================
+function deleteUser(data) {
+  if (String(data.role || "").toLowerCase() !== "admin") {
+    return { success: false, message: "Only Admin can delete users." };
+  }
+  if (!data.targetUserId) {
+    return { success: false, message: "targetUserId is required." };
+  }
+  if (String(data.targetUserId) === String(data.userId)) {
+    return { success: false, message: "You cannot delete your own account." };
+  }
+
+  const sheet  = getSheet(STORE.USERS);
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0].map(function(h) { return String(h).trim(); });
+
+  const idIdx     = findColumn(headers, ["UserID","ID","UserId"]);
+  const statusIdx = findColumn(headers, ["Status","AccountStatus"]);
+  const nameIdx   = findColumn(headers, ["Username","UserName"]);
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][idIdx]).toLowerCase() === String(data.targetUserId).toLowerCase()) {
+      if (statusIdx >= 0) sheet.getRange(i + 1, statusIdx + 1).setValue("Inactive");
+      const uname = nameIdx >= 0 ? String(values[i][nameIdx]) : data.targetUserId;
+      writeLog(data.userId || "", data.userName || "", data.role || "",
+               "DELETE USER", uname);
+      return { success: true, message: "User deactivated successfully." };
+    }
+  }
+  return { success: false, message: "User not found." };
 }

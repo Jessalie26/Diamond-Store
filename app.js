@@ -171,6 +171,7 @@ function openSuppliers() {
     showPage("supplierPage");
     setMessage("supplierMessage", "");
     loadInventory();
+    loadSupplierList();
 }
 
 function openSpoilage() {
@@ -184,6 +185,13 @@ function openAnalytics() {
     if (!isAdmin()) { alert("Sales Analytics is Admin only."); return; }
     showPage("analyticsPage");
     loadAnalytics();
+}
+
+function openUsers() {
+    if (!isAdmin()) { alert("User Management is Admin only."); return; }
+    showPage("usersPage");
+    setMessage("userMessage", "");
+    loadUserList();
 }
 
 
@@ -213,6 +221,7 @@ function configureRole() {
         supplierButton:   admin,
         spoilageButton:   admin,
         analyticsButton:  admin,
+        usersButton:      admin,
         adminStockEditor: admin
     };
 
@@ -393,6 +402,11 @@ function renderInventory() {
             "</div>" +
             '<p class="price-line">Price: <strong>' + money(price) + '</strong> / kg</p>' +
             '<span class="' + badgeClass + '">' + badgeLabel + "</span>" +
+            (isAdmin()
+                ? '<button type="button" class="btn-danger" style="margin-top:10px;" ' +
+                  'onclick="deleteInventory(\'' + escapeHtml(String(item.inventoryId)) + '\',\'' +
+                  escapeHtml(item.riceType) + '\')">Delete</button>'
+                : '') +
             "</div>"
         );
     }).join("");
@@ -1248,6 +1262,349 @@ async function exportReport() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+}
+
+
+// ============================================================
+// INVENTORY — DELETE (Admin only, soft delete)
+// ============================================================
+
+async function deleteInventory(inventoryId, riceTypeName) {
+    if (!isAdmin()) { alert("Only Admin can delete inventory."); return; }
+    if (!confirm("Delete \"" + riceTypeName + "\" from inventory?\nThis cannot be undone.")) { return; }
+
+    var result = await apiPost("deleteInventory", {
+        inventoryId: inventoryId,
+        role:        currentUser.role,
+        userId:      currentUser.userId,
+        userName:    currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        alert(result.message || "Could not delete inventory item.");
+        return;
+    }
+
+    alert(result.message);
+    await loadInventory();
+}
+
+
+// ============================================================
+// SUPPLIER — UPDATE
+// ============================================================
+
+async function updateSupplier() {
+    if (!isAdmin()) { alert("Only Admin can update suppliers."); return; }
+
+    var idEl      = document.getElementById("editSupplierId");
+    var nameEl    = document.getElementById("editSupplierName");
+    var contactEl = document.getElementById("editSupplierContact");
+    var addressEl = document.getElementById("editSupplierAddress");
+
+    var supplierId = idEl      ? idEl.value.trim()      : "";
+    var name       = nameEl    ? nameEl.value.trim()    : "";
+    var contact    = contactEl ? contactEl.value.trim() : "";
+    var address    = addressEl ? addressEl.value.trim() : "";
+
+    if (!supplierId || !name) {
+        setMessage("supplierMessage", "Select a supplier to edit.", true);
+        return;
+    }
+
+    setMessage("supplierMessage", "Updating supplier...");
+
+    var result = await apiPost("updateSupplier", {
+        supplierId:    supplierId,
+        supplierName:  name,
+        contactNumber: contact,
+        address:       address,
+        role:          currentUser.role,
+        userId:        currentUser.userId,
+        userName:      currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        setMessage("supplierMessage", result.message || "Update failed.", true);
+        return;
+    }
+
+    setMessage("supplierMessage", "Supplier updated successfully.");
+    clearSupplierEditForm();
+    await loadSupplierList();
+}
+
+
+// ============================================================
+// SUPPLIER — DELETE
+// ============================================================
+
+async function deleteSupplier(supplierId, supplierName) {
+    if (!isAdmin()) { alert("Only Admin can delete suppliers."); return; }
+    if (!confirm("Deactivate supplier \"" + supplierName + "\"?")) { return; }
+
+    var result = await apiPost("deleteSupplier", {
+        supplierId: supplierId,
+        role:       currentUser.role,
+        userId:     currentUser.userId,
+        userName:   currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        alert(result.message || "Could not delete supplier.");
+        return;
+    }
+
+    alert(result.message);
+    setMessage("supplierMessage", "Supplier deactivated.");
+    await loadSupplierList();
+}
+
+
+// ============================================================
+// SUPPLIER — LOAD LIST
+// ============================================================
+
+async function loadSupplierList() {
+    var container = document.getElementById("supplierList");
+    if (!container) { return; }
+
+    var result = await apiGet("suppliers");
+    if (!result || !result.success) {
+        container.innerHTML = "<p>Could not load suppliers.</p>";
+        return;
+    }
+
+    var suppliers = Array.isArray(result.suppliers) ? result.suppliers : [];
+    var active    = suppliers.filter(function(s) {
+        return String(s.Status || "Active").toLowerCase() !== "inactive";
+    });
+
+    if (!active.length) {
+        container.innerHTML = "<p>No suppliers yet.</p>";
+        return;
+    }
+
+    container.innerHTML = active.map(function(s) {
+        var sid  = escapeHtml(String(s.SupplierID   || s.supplierId   || ""));
+        var name = escapeHtml(String(s.SupplierName || s.supplierName || ""));
+        var tel  = escapeHtml(String(s.ContactNumber|| s.contactNumber|| ""));
+        var addr = escapeHtml(String(s.Address      || s.address      || ""));
+        return (
+            '<div class="inventory-card" style="margin-bottom:12px;">' +
+            '<h3>' + name + '</h3>' +
+            '<p style="font-size:.85rem;color:var(--gray-700);">Tel: ' + (tel  || "—") + '</p>' +
+            '<p style="font-size:.85rem;color:var(--gray-700);">Address: ' + (addr || "—") + '</p>' +
+            '<div style="display:flex;gap:8px;margin-top:10px;">' +
+            '<button type="button" class="btn-outline" style="padding:6px 14px;font-size:.78rem;margin-top:0;" ' +
+            'onclick="fillSupplierEditForm(\'' + sid + '\',\'' + name + '\',\'' + tel + '\',\'' + addr + '\')">' +
+            'Edit</button>' +
+            '<button type="button" class="btn-danger" style="padding:6px 14px;" ' +
+            'onclick="deleteSupplier(\'' + sid + '\',\'' + name + '\')">Delete</button>' +
+            '</div></div>'
+        );
+    }).join("");
+}
+
+
+function fillSupplierEditForm(id, name, contact, address) {
+    var idEl      = document.getElementById("editSupplierId");
+    var nameEl    = document.getElementById("editSupplierName");
+    var contactEl = document.getElementById("editSupplierContact");
+    var addressEl = document.getElementById("editSupplierAddress");
+    if (idEl)      { idEl.value      = id;      }
+    if (nameEl)    { nameEl.value    = name;    }
+    if (contactEl) { contactEl.value = contact; }
+    if (addressEl) { addressEl.value = address; }
+    setMessage("supplierMessage", "Editing: " + name + ". Make changes then click Update Supplier.");
+}
+
+function clearSupplierEditForm() {
+    ["editSupplierId","editSupplierName","editSupplierContact","editSupplierAddress"]
+        .forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) { el.value = ""; }
+        });
+}
+
+
+// ============================================================
+// USER MANAGEMENT — LOAD LIST
+// ============================================================
+
+async function loadUserList() {
+    var container = document.getElementById("userList");
+    if (!container) { return; }
+
+    var result = await apiPost("getUsers", {
+        role:     currentUser.role,
+        userId:   currentUser.userId,
+        userName: currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        container.innerHTML = "<p>Could not load users.</p>";
+        return;
+    }
+
+    var users = Array.isArray(result.users) ? result.users : [];
+    if (!users.length) { container.innerHTML = "<p>No users found.</p>"; return; }
+
+    container.innerHTML = users.map(function(u) {
+        var uid      = escapeHtml(String(u.userId   || ""));
+        var uname    = escapeHtml(String(u.username || ""));
+        var fname    = escapeHtml(String(u.fullName || ""));
+        var urole    = escapeHtml(String(u.role     || ""));
+        var ustatus  = escapeHtml(String(u.status   || "Active"));
+        var isSelf   = u.userId === currentUser.userId;
+        return (
+            '<div class="inventory-card" style="margin-bottom:12px;">' +
+            '<h3>' + fname + ' <small style="font-size:.75rem;color:var(--gray-500);">(' + urole + ')</small></h3>' +
+            '<p style="font-size:.82rem;color:var(--gray-700);">Username: ' + uname + '</p>' +
+            '<p style="font-size:.82rem;color:var(--gray-700);">Status: ' + ustatus + '</p>' +
+            '<div style="display:flex;gap:8px;margin-top:10px;">' +
+            '<button type="button" class="btn-outline" style="padding:6px 14px;font-size:.78rem;margin-top:0;" ' +
+            'onclick="fillUserEditForm(\'' + uid + '\',\'' + fname + '\',\'' + urole + '\',\'' + ustatus + '\')">' +
+            'Edit</button>' +
+            (!isSelf ? '<button type="button" class="btn-danger" style="padding:6px 14px;" ' +
+            'onclick="deleteUserAccount(\'' + uid + '\',\'' + uname + '\')">Deactivate</button>' : '') +
+            '</div></div>'
+        );
+    }).join("");
+}
+
+
+function fillUserEditForm(userId, fullName, role, status) {
+    var uidEl    = document.getElementById("editUserId");
+    var nameEl   = document.getElementById("editUserFullName");
+    var roleEl   = document.getElementById("editUserRole");
+    var statusEl = document.getElementById("editUserStatus");
+    if (uidEl)    { uidEl.value    = userId;   }
+    if (nameEl)   { nameEl.value   = fullName; }
+    if (roleEl)   { roleEl.value   = role;     }
+    if (statusEl) { statusEl.value = status;   }
+    setMessage("userMessage", "Editing: " + fullName + ". Make changes then click Update User.");
+}
+
+
+// ============================================================
+// USER MANAGEMENT — ADD USER
+// ============================================================
+
+async function addUserAccount() {
+    if (!isAdmin()) { alert("Only Admin can add users."); return; }
+
+    var unameEl  = document.getElementById("newUsername");
+    var passEl   = document.getElementById("newUserPassword");
+    var nameEl   = document.getElementById("newUserFullName");
+    var roleEl   = document.getElementById("newUserRole");
+
+    var username = unameEl ? unameEl.value.trim() : "";
+    var password = passEl  ? passEl.value.trim()  : "";
+    var fullName = nameEl  ? nameEl.value.trim()  : "";
+    var newRole  = roleEl  ? roleEl.value         : "Cashier";
+
+    if (!username || !password || !fullName) {
+        setMessage("userMessage", "Username, password, and full name are required.", true);
+        return;
+    }
+
+    setMessage("userMessage", "Creating user...");
+
+    var result = await apiPost("addUser", {
+        newUsername: username,
+        newPassword: password,
+        fullName:    fullName,
+        newRole:     newRole,
+        role:        currentUser.role,
+        userId:      currentUser.userId,
+        userName:    currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        setMessage("userMessage", result.message || "Failed to create user.", true);
+        return;
+    }
+
+    setMessage("userMessage", "User " + username + " created successfully.");
+    if (unameEl) { unameEl.value = ""; }
+    if (passEl)  { passEl.value  = ""; }
+    if (nameEl)  { nameEl.value  = ""; }
+    await loadUserList();
+}
+
+
+// ============================================================
+// USER MANAGEMENT — UPDATE USER
+// ============================================================
+
+async function updateUserAccount() {
+    if (!isAdmin()) { alert("Only Admin can update users."); return; }
+
+    var uidEl    = document.getElementById("editUserId");
+    var nameEl   = document.getElementById("editUserFullName");
+    var roleEl   = document.getElementById("editUserRole");
+    var statusEl = document.getElementById("editUserStatus");
+    var passEl   = document.getElementById("editUserPassword");
+
+    var targetUserId = uidEl    ? uidEl.value.trim()    : "";
+    var fullName     = nameEl   ? nameEl.value.trim()   : "";
+    var newRole      = roleEl   ? roleEl.value          : "";
+    var newStatus    = statusEl ? statusEl.value        : "";
+    var newPassword  = passEl   ? passEl.value.trim()   : "";
+
+    if (!targetUserId) {
+        setMessage("userMessage", "Select a user to edit.", true);
+        return;
+    }
+
+    setMessage("userMessage", "Updating user...");
+
+    var result = await apiPost("updateUser", {
+        targetUserId: targetUserId,
+        fullName:     fullName,
+        newRole:      newRole,
+        newStatus:    newStatus,
+        newPassword:  newPassword || undefined,
+        role:         currentUser.role,
+        userId:       currentUser.userId,
+        userName:     currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        setMessage("userMessage", result.message || "Update failed.", true);
+        return;
+    }
+
+    setMessage("userMessage", "User updated successfully.");
+    if (passEl) { passEl.value = ""; }
+    await loadUserList();
+}
+
+
+// ============================================================
+// USER MANAGEMENT — DELETE/DEACTIVATE USER
+// ============================================================
+
+async function deleteUserAccount(targetUserId, username) {
+    if (!isAdmin()) { alert("Only Admin can deactivate users."); return; }
+    if (!confirm("Deactivate user \"" + username + "\"? They will not be able to log in.")) { return; }
+
+    var result = await apiPost("deleteUser", {
+        targetUserId: targetUserId,
+        role:         currentUser.role,
+        userId:       currentUser.userId,
+        userName:     currentUser.fullName
+    });
+
+    if (!result || !result.success) {
+        alert(result.message || "Could not deactivate user.");
+        return;
+    }
+
+    alert(result.message);
+    setMessage("userMessage", "User deactivated.");
+    await loadUserList();
 }
 
 
