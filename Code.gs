@@ -33,7 +33,11 @@ function doGet(e) {
 
     switch (action) {
       case "health":
-        return response({ success: true, message: "DIAMOND STORE API is running." });
+        return response({
+          success: true,
+          message: "DIAMOND STORE API is running.",
+          spreadsheetId: PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID") || "bound"
+        });
       case "inventory":
         return response({ success: true, inventory: getInventory() });
       case "analytics":
@@ -80,6 +84,8 @@ function doPost(e) {
       case "addUser":          return response(addUser(data));
       case "updateUser":       return response(updateUser(data));
       case "deleteUser":       return response(deleteUser(data));
+      // ── SETUP ─────────────────────────────────────────
+      case "setup":            return response(setupSpreadsheet(data));
       default:
         return response({ success: false, message: "Unknown action: " + action });
     }
@@ -100,8 +106,26 @@ function response(data) {
 // ============================================================
 // SHEET HELPERS
 // ============================================================
+
+/**
+ * Returns the active spreadsheet.
+ * If a spreadsheet ID has been saved in Script Properties
+ * (set by setupSpreadsheet), that one is used.
+ * Otherwise falls back to the spreadsheet the script is
+ * bound to (the original behaviour).
+ */
+function getSpreadsheet() {
+  const props = PropertiesService.getScriptProperties();
+  const savedId = props.getProperty("SPREADSHEET_ID");
+  if (savedId) {
+    return SpreadsheetApp.openById(savedId);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
 function getSheet(name) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  const ss    = getSpreadsheet();
+  const sheet = ss.getSheetByName(name);
   if (!sheet) throw new Error("Sheet not found: " + name);
   return sheet;
 }
@@ -1128,4 +1152,186 @@ function deleteUser(data) {
     }
   }
   return { success: false, message: "User not found." };
+}
+
+// ============================================================
+// SETUP — Create a brand-new Google Spreadsheet with all
+//         required sheets and headers (no data rows).
+//
+// HOW TO USE:
+//   Option A (recommended — run once from Apps Script editor):
+//     1. Open this script in the Apps Script editor.
+//     2. In the function dropdown, select "runSetup".
+//     3. Click Run. Authorize when prompted.
+//     4. The spreadsheet URL will be logged in the console.
+//
+//   Option B (via API — Admin POST):
+//     POST { action: "setup", adminPassword: "yourpassword" }
+//     Returns the new spreadsheet URL.
+//
+// After running, the new spreadsheet ID is saved in
+// Script Properties so all other functions use it automatically.
+// ============================================================
+
+// ── Run this once from the Apps Script editor ───────────────
+function runSetup() {
+  const result = setupSpreadsheet({ _fromEditor: true });
+  Logger.log("=== SETUP COMPLETE ===");
+  Logger.log("Spreadsheet URL: " + result.url);
+  Logger.log("Admin username:  admin");
+  Logger.log("Admin password:  admin123");
+  Logger.log("Cashier username: cashier");
+  Logger.log("Cashier password: cashier123");
+}
+
+// ── Core setup function ─────────────────────────────────────
+function setupSpreadsheet(data) {
+  // If called via API (not from editor), require an admin password
+  if (!data._fromEditor) {
+    const key = String(data.setupKey || "");
+    const expected = PropertiesService.getScriptProperties()
+                       .getProperty("SETUP_KEY") || "diamond2024";
+    if (key !== expected) {
+      return { success: false, message: "Invalid setup key." };
+    }
+  }
+
+  // Check if already set up
+  const props   = PropertiesService.getScriptProperties();
+  const existing = props.getProperty("SPREADSHEET_ID");
+  if (existing && !data.force) {
+    try {
+      const ss = SpreadsheetApp.openById(existing);
+      return {
+        success: true,
+        message: "Spreadsheet already exists. Pass force:true to recreate.",
+        url: ss.getUrl(),
+        spreadsheetId: existing
+      };
+    } catch (e) {
+      // existing ID is stale — continue to create a new one
+    }
+  }
+
+  // ── 1. Create new spreadsheet ────────────────────────────
+  const ss = SpreadsheetApp.create("Diamond Store Database");
+  const ssId = ss.getId();
+
+  // Save the ID so getSheet() uses it from now on
+  props.setProperty("SPREADSHEET_ID", ssId);
+
+  // ── 2. Define all sheets with their header rows ──────────
+  const SHEETS = {
+    "Users": [
+      "UserID", "Username", "PasswordHash", "FullName", "Role", "Status"
+    ],
+    "Inventory": [
+      "InventoryID", "RiceType", "QuantitySacks", "LooseKg",
+      "PricePerKg", "PricePerSack", "CostPerKg", "Status", "UpdatedAt"
+    ],
+    "Sales": [
+      "SaleID", "TransactionNumber", "CashierID", "CashierName",
+      "Role", "TotalAmount", "CashReceived", "ChangeAmount",
+      "SaleDate", "SaleTime", "Status"
+    ],
+    "SaleItems": [
+      "SaleItemID", "SaleID", "RiceType", "QuantityKg",
+      "PricePerKg", "CostPerKg", "Subtotal"
+    ],
+    "Suppliers": [
+      "SupplierID", "SupplierName", "ContactNumber", "Address",
+      "Status", "CreatedAt"
+    ],
+    "Shipments": [
+      "ShipmentID", "SupplierID", "SupplierName", "RiceType",
+      "SacksReceived", "KgReceived", "TotalCost", "CostPerKg",
+      "ShipmentDate", "RecordedBy"
+    ],
+    "Spoilage": [
+      "SpoilageID", "InventoryID", "RiceType", "DamagedKg",
+      "Reason", "EstimatedLoss", "Date", "RecordedBy"
+    ],
+    "Shifts": [
+      "ShiftID", "CashierID", "CashierName", "OpeningCash",
+      "ClosingCash", "TotalSales", "StartTime", "Status", "EndTime"
+    ],
+    "Logs": [
+      "LogID", "UserID", "Username", "Role",
+      "Action", "Details", "Timestamp"
+    ],
+    "LoginAttempts": [
+      "Username", "FailCount", "LastAttempt", "LockedUntil"
+    ]
+  };
+
+  // Delete the default "Sheet1" that Google creates automatically
+  const defaultSheet = ss.getSheets()[0];
+
+  const sheetNames = Object.keys(SHEETS);
+
+  // Create each sheet and write its header row
+  sheetNames.forEach(function(name, i) {
+    let sheet;
+    if (i === 0) {
+      // Rename the existing default sheet rather than creating a new one
+      defaultSheet.setName(name);
+      sheet = defaultSheet;
+    } else {
+      sheet = ss.insertSheet(name);
+    }
+
+    const headers = SHEETS[name];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+    // Style the header row
+    sheet.getRange(1, 1, 1, headers.length)
+      .setBackground("#0f1e35")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold");
+
+    sheet.setFrozenRows(1);
+
+    // Auto-resize columns
+    sheet.autoResizeColumns(1, headers.length);
+  });
+
+  // ── 3. Add default users (hashed passwords) ─────────────
+  //   admin    / admin123
+  //   cashier  / cashier123
+  const usersSheet = ss.getSheetByName("Users");
+  usersSheet.appendRow([
+    generateId("USR"),
+    "admin",
+    hashPassword("admin123"),
+    "System Administrator",
+    "Admin",
+    "Active"
+  ]);
+  usersSheet.appendRow([
+    generateId("USR"),
+    "cashier",
+    hashPassword("cashier123"),
+    "Default Cashier",
+    "Cashier",
+    "Active"
+  ]);
+
+  // ── 4. Log the setup ─────────────────────────────────────
+  const logsSheet = ss.getSheetByName("Logs");
+  logsSheet.appendRow([
+    generateId("LOG"),
+    "SYSTEM",
+    "setup",
+    "Admin",
+    "SETUP",
+    "Spreadsheet initialized",
+    new Date()
+  ]);
+
+  return {
+    success: true,
+    message: "Diamond Store Database created successfully.",
+    url:     ss.getUrl(),
+    spreadsheetId: ssId
+  };
 }
